@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
@@ -9,8 +10,9 @@ import { UserProfile } from './user-profile';
 import { Auth } from '../../core/services/auth';
 import { OrderService } from '../../core/services/order';
 import { Cart } from '../../core/services/cart';
+import { MediaService } from '../../core/services/media';
 import { User } from '../../core/models/user.model';
-import { UserOrderStats } from '../../core/models/order.model';
+import { UserOrderStats, UserProductStats } from '../../core/models/order.model';
 import { CartItem } from '../../core/models/cart.model';
 
 describe('UserProfile', () => {
@@ -18,6 +20,7 @@ describe('UserProfile', () => {
   let fixture: ComponentFixture<UserProfile>;
   let authService: jasmine.SpyObj<Auth>;
   let orderService: jasmine.SpyObj<OrderService>;
+  let mediaService: jasmine.SpyObj<MediaService>;
   let cartService: Cart;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
   let router: Router;
@@ -38,9 +41,17 @@ describe('UserProfile', () => {
     totalSpent: 1500.50,
   };
 
+  const mockProductStats: UserProductStats = {
+    mostPurchasedProducts: [],
+    topCategories: [],
+    totalUniqueProducts: 3,
+    totalItemsPurchased: 5,
+  };
+
   beforeEach(async () => {
     authService = jasmine.createSpyObj<Auth>('Auth', ['getCurrentUser', 'logout']);
-    orderService = jasmine.createSpyObj<OrderService>('OrderService', ['getUserStats']);
+    orderService = jasmine.createSpyObj<OrderService>('OrderService', ['getUserStats', 'getUserProductStats']);
+    mediaService = jasmine.createSpyObj<MediaService>('MediaService', ['getImageUrl']);
     snackBar = jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']);
     cartStream = new BehaviorSubject<CartItem[]>([]);
 
@@ -51,16 +62,20 @@ describe('UserProfile', () => {
 
     authService.getCurrentUser.and.returnValue(mockUser);
     orderService.getUserStats.and.returnValue(of(mockStats));
+    orderService.getUserProductStats.and.returnValue(of(mockProductStats));
+    mediaService.getImageUrl.and.callFake((url: string) => `http://cdn${url}`);
 
     await TestBed.configureTestingModule({
       imports: [
         UserProfile,
         RouterTestingModule.withRoutes([]),
+        HttpClientTestingModule,
         NoopAnimationsModule,
       ],
       providers: [
         { provide: Auth, useValue: authService },
         { provide: OrderService, useValue: orderService },
+        { provide: MediaService, useValue: mediaService },
         { provide: Cart, useValue: cartService },
         { provide: MatSnackBar, useValue: snackBar },
       ],

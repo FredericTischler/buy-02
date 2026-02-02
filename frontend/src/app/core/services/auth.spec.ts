@@ -50,6 +50,10 @@ describe('Auth service', () => {
     expect(req.request.method).toBe('POST');
     req.flush(response);
 
+    // Handle any additional requests triggered by login (e.g., wishlist load)
+    const wishlistReqs = httpMock.match((r) => r.url.includes('wishlist'));
+    wishlistReqs.forEach((r) => r.flush([]));
+
     expect(localStorage.getItem('auth_token')).toBe('jwt');
     expect(JSON.parse(localStorage.getItem('current_user')!).email).toBe('alice@mail.com');
     expect(cartSpy.loadCart).toHaveBeenCalled();

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -9,6 +10,7 @@ import { ProductDetail } from './product-detail';
 import { Product as ProductService } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
+import { WishlistService } from '../../../core/services/wishlist';
 import { Product as ProductModel } from '../../../core/models/product.model';
 import { Media } from '../../../core/models/media.model';
 import { CartItem } from '../../../core/models/cart.model';
@@ -19,6 +21,7 @@ describe('ProductDetail', () => {
   let productService: jasmine.SpyObj<ProductService>;
   let mediaService: jasmine.SpyObj<MediaService>;
   let cartService: jasmine.SpyObj<Cart>;
+  let wishlistService: jasmine.SpyObj<WishlistService>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
   let router: Router;
   let route: ActivatedRoute;
@@ -51,12 +54,19 @@ describe('ProductDetail', () => {
     productService = jasmine.createSpyObj<ProductService>('Product', ['getProductById']);
     mediaService = jasmine.createSpyObj<MediaService>('MediaService', ['getMediaByProduct', 'getImageUrl']);
     cartService = jasmine.createSpyObj<Cart>('Cart', ['getCartItems', 'addToCart']);
+    wishlistService = jasmine.createSpyObj<WishlistService>('WishlistService', [
+      'isInWishlistSync',
+      'toggleWishlist',
+      'getWishlistIds'
+    ]);
     snackBar = jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']);
 
     productService.getProductById.and.returnValue(of(mockProduct));
     mediaService.getMediaByProduct.and.returnValue(of(mockMedia));
     mediaService.getImageUrl.and.callFake((url: string) => `http://cdn${url}`);
     cartService.getCartItems.and.returnValue([]);
+    wishlistService.isInWishlistSync.and.returnValue(false);
+    wishlistService.toggleWishlist.and.returnValue(of({ message: 'Added', wishlist: ['1'] }));
     snackBar.open.and.returnValue({
       onAction: () => of(null),
     } as any);
@@ -65,12 +75,14 @@ describe('ProductDetail', () => {
       imports: [
         ProductDetail,
         RouterTestingModule.withRoutes([]),
+        HttpClientTestingModule,
         NoopAnimationsModule,
       ],
       providers: [
         { provide: ProductService, useValue: productService },
         { provide: MediaService, useValue: mediaService },
         { provide: Cart, useValue: cartService },
+        { provide: WishlistService, useValue: wishlistService },
         { provide: MatSnackBar, useValue: snackBar },
         {
           provide: ActivatedRoute,

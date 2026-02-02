@@ -344,8 +344,8 @@ describe('ProductFormDialog', () => {
 
     it('should have available categories', () => {
       expect(component.categories.length).toBeGreaterThan(0);
-      expect(component.categories).toContain('Electronics');
-      expect(component.categories).toContain('Fashion');
+      expect(component.categories).toContain('Smartphones');
+      expect(component.categories).toContain('Laptops');
     });
   });
 });
