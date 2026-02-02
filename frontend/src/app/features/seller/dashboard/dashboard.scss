@@ -119,6 +119,163 @@
   }
 }
 
+// Insights Section (Best Selling & Recent Sales)
+.insights-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.insights-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 600;
+
+      mat-icon {
+        color: #3f51b5;
+      }
+    }
+
+    mat-card-subtitle {
+      color: rgba(0, 0, 0, 0.6);
+      margin-top: 4px;
+    }
+  }
+}
+
+.best-products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.best-product-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  .rank {
+    font-size: 14px;
+    font-weight: 700;
+    color: #3f51b5;
+    min-width: 32px;
+  }
+
+  .product-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    mat-icon {
+      color: #9e9e9e;
+      font-size: 24px;
+    }
+  }
+
+  .product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .product-name {
+      font-weight: 500;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-meta {
+      font-size: 12px;
+      color: #666;
+    }
+  }
+
+  .product-revenue {
+    font-weight: 600;
+    color: #4caf50;
+    font-size: 14px;
+  }
+}
+
+.recent-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sale-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+
+  .sale-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    .sale-product {
+      font-weight: 500;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sale-customer {
+      font-size: 12px;
+      color: #666;
+    }
+  }
+
+  .sale-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    .sale-amount {
+      font-weight: 600;
+      color: #4caf50;
+    }
+
+    .sale-date {
+      font-size: 11px;
+      color: #999;
+    }
+  }
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -253,6 +410,16 @@
 
     th, td {
       padding: 10px;
+    }
+  }
+
+  .insights-section {
+    grid-template-columns: 1fr;
+  }
+
+  .best-product-item {
+    .rank {
+      display: none;
     }
   }
 }

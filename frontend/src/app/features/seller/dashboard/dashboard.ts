@@ -13,7 +13,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Product } from '../../../core/services/product';
 import { Auth } from '../../../core/services/auth';
 import { OrderService } from '../../../core/services/order';
-import { SellerOrderStats } from '../../../core/models/order.model';
+import { MediaService } from '../../../core/services/media';
+import { SellerOrderStats, SellerProductStats } from '../../../core/models/order.model';
 import { Product as ProductModel } from '../../../core/models/product.model';
 import { ProductFormDialog } from '../product-form-dialog/product-form-dialog';
 import { resolveApiBase } from '../../../core/utils/api-host';
@@ -42,13 +43,16 @@ export class Dashboard implements OnInit {
   errorMessage = '';
   currentUser: any = null;
   stats: SellerOrderStats | null = null;
+  productStats: SellerProductStats | null = null;
   statsLoading = true;
+  productStatsLoading = true;
   private readonly authApiBase = resolveApiBase(8081);
 
   constructor(
     private readonly productService: Product,
     private readonly authService: Auth,
     private readonly orderService: OrderService,
+    private readonly mediaService: MediaService,
     private readonly router: Router,
     private readonly dialog: MatDialog,
     private readonly snackBar: MatSnackBar
@@ -58,6 +62,7 @@ export class Dashboard implements OnInit {
     this.currentUser = this.authService.getCurrentUser();
     this.loadMyProducts();
     this.loadStats();
+    this.loadProductStats();
   }
 
   loadStats(): void {
@@ -70,6 +75,33 @@ export class Dashboard implements OnInit {
       error: () => {
         this.statsLoading = false;
       }
+    });
+  }
+
+  loadProductStats(): void {
+    this.productStatsLoading = true;
+    this.orderService.getSellerProductStats().subscribe({
+      next: (productStats) => {
+        this.productStats = productStats;
+        this.productStatsLoading = false;
+      },
+      error: () => {
+        this.productStatsLoading = false;
+      }
+    });
+  }
+
+  getProductImageUrl(imageUrl: string | undefined): string {
+    if (!imageUrl) return '';
+    return this.mediaService.getImageUrl(imageUrl);
+  }
+
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 

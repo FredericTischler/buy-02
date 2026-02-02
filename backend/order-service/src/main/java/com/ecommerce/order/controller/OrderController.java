@@ -2,7 +2,9 @@ package com.ecommerce.order.controller;
 
 import com.ecommerce.order.dto.OrderRequest;
 import com.ecommerce.order.dto.OrderResponse;
+import com.ecommerce.order.dto.SellerProductStats;
 import com.ecommerce.order.dto.StatusUpdateRequest;
+import com.ecommerce.order.dto.UserProductStats;
 import com.ecommerce.order.model.OrderStatus;
 import com.ecommerce.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -283,6 +285,53 @@ public class OrderController {
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             log.error("Error fetching seller stats: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get detailed user product statistics (most purchased products)
+     * GET /api/orders/stats/user/products
+     */
+    @GetMapping("/stats/user/products")
+    public ResponseEntity<?> getUserProductStats(HttpServletRequest httpRequest) {
+        try {
+            String userId = (String) httpRequest.getAttribute("userId");
+
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not authenticated"));
+            }
+
+            UserProductStats stats = orderService.getUserProductStats(userId);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error fetching user product stats: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Get detailed seller product statistics (best selling products)
+     * GET /api/orders/stats/seller/products
+     */
+    @GetMapping("/stats/seller/products")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<?> getSellerProductStats(HttpServletRequest httpRequest) {
+        try {
+            String sellerId = (String) httpRequest.getAttribute("userId");
+
+            if (sellerId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not authenticated"));
+            }
+
+            SellerProductStats stats = orderService.getSellerProductStats(sellerId);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error fetching seller product stats: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         }

@@ -80,3 +80,55 @@ export interface SellerOrderStats {
   totalRevenue: number;
   totalItemsSold: number;
 }
+
+// Advanced stats interfaces
+export interface ProductPurchaseInfo {
+  productId: string;
+  productName: string;
+  sellerId: string;
+  sellerName: string;
+  totalQuantity: number;
+  totalSpent: number;
+  lastPurchased: Date;
+  imageUrl?: string;
+}
+
+export interface CategoryStats {
+  category: string;
+  orderCount: number;
+  itemCount: number;
+  totalSpent: number;
+}
+
+export interface UserProductStats {
+  mostPurchasedProducts: ProductPurchaseInfo[];
+  topCategories: CategoryStats[];
+  totalUniqueProducts: number;
+  totalItemsPurchased: number;
+}
+
+export interface BestSellingProduct {
+  productId: string;
+  productName: string;
+  totalSold: number;
+  revenue: number;
+  orderCount: number;
+  imageUrl?: string;
+}
+
+export interface RecentSale {
+  orderId: string;
+  productId: string;
+  productName: string;
+  customerName: string;
+  quantity: number;
+  amount: number;
+  saleDate: Date;
+}
+
+export interface SellerProductStats {
+  bestSellingProducts: BestSellingProduct[];
+  recentSales: RecentSale[];
+  totalUniqueProductsSold: number;
+  totalCustomers: number;
+}

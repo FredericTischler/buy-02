@@ -7,7 +7,9 @@ import {
   OrderStatus,
   StatusUpdateRequest,
   UserOrderStats,
-  SellerOrderStats
+  SellerOrderStats,
+  UserProductStats,
+  SellerProductStats
 } from '../models/order.model';
 import { resolveApiBase } from '../utils/api-host';
 
@@ -87,6 +89,20 @@ export class OrderService {
    */
   getSellerStats(): Observable<SellerOrderStats> {
     return this.http.get<SellerOrderStats>(`${this.API_URL}/stats/seller`);
+  }
+
+  /**
+   * Get detailed user product statistics (most purchased products)
+   */
+  getUserProductStats(): Observable<UserProductStats> {
+    return this.http.get<UserProductStats>(`${this.API_URL}/stats/user/products`);
+  }
+
+  /**
+   * Get detailed seller product statistics (best selling products)
+   */
+  getSellerProductStats(): Observable<SellerProductStats> {
+    return this.http.get<SellerProductStats>(`${this.API_URL}/stats/seller/products`);
   }
 
   /**

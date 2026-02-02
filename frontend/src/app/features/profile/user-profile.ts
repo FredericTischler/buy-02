@@ -14,8 +14,9 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { Auth } from '../../core/services/auth';
 import { OrderService } from '../../core/services/order';
 import { Cart } from '../../core/services/cart';
+import { MediaService } from '../../core/services/media';
 import { User } from '../../core/models/user.model';
-import { UserOrderStats } from '../../core/models/order.model';
+import { UserOrderStats, UserProductStats } from '../../core/models/order.model';
 import { resolveApiBase } from '../../core/utils/api-host';
 
 @Component({
@@ -39,8 +40,10 @@ import { resolveApiBase } from '../../core/utils/api-host';
 export class UserProfile implements OnInit {
   user: User | null = null;
   stats: UserOrderStats | null = null;
+  productStats: UserProductStats | null = null;
   isLoading = true;
   statsLoading = true;
+  productStatsLoading = true;
   cartCount = 0;
 
   private readonly userApiBase = resolveApiBase(8081);
@@ -49,6 +52,7 @@ export class UserProfile implements OnInit {
     private readonly authService: Auth,
     private readonly orderService: OrderService,
     private readonly cartService: Cart,
+    private readonly mediaService: MediaService,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar
   ) {}
@@ -56,6 +60,7 @@ export class UserProfile implements OnInit {
   ngOnInit(): void {
     this.loadUserProfile();
     this.loadUserStats();
+    this.loadUserProductStats();
     this.updateCartCount();
     this.cartService.cartItems$.subscribe(() => {
       this.updateCartCount();
@@ -88,6 +93,29 @@ export class UserProfile implements OnInit {
         });
       }
     });
+  }
+
+  loadUserProductStats(): void {
+    this.productStatsLoading = true;
+    this.orderService.getUserProductStats().subscribe({
+      next: (productStats) => {
+        this.productStats = productStats;
+        this.productStatsLoading = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement stats produits:', error);
+        this.productStatsLoading = false;
+      }
+    });
+  }
+
+  getProductImageUrl(imageUrl: string | undefined): string {
+    if (!imageUrl) return '';
+    return this.mediaService.getImageUrl(imageUrl);
+  }
+
+  goToProduct(productId: string): void {
+    this.router.navigate(['/products', productId]);
   }
 
   updateCartCount(): void {

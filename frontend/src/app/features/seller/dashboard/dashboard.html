@@ -75,6 +75,75 @@
       }
     </div>
 
+    <!-- Best Selling Products & Recent Sales -->
+    @if (productStats && (productStats.bestSellingProducts.length > 0 || productStats.recentSales.length > 0)) {
+      <div class="insights-section">
+        <!-- Best Selling Products -->
+        @if (productStats.bestSellingProducts.length > 0) {
+          <mat-card class="insights-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>trending_up</mat-icon>
+                Meilleurs produits
+              </mat-card-title>
+              <mat-card-subtitle>
+                {{ productStats.totalUniqueProductsSold }} produits vendus à {{ productStats.totalCustomers }} clients
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="best-products-list">
+                @for (product of productStats.bestSellingProducts.slice(0, 5); track product.productId; let i = $index) {
+                  <div class="best-product-item">
+                    <span class="rank">#{{ i + 1 }}</span>
+                    <div class="product-image">
+                      @if (product.imageUrl) {
+                        <img [src]="getProductImageUrl(product.imageUrl)" [alt]="product.productName" />
+                      } @else {
+                        <mat-icon>inventory_2</mat-icon>
+                      }
+                    </div>
+                    <div class="product-info">
+                      <span class="product-name">{{ product.productName }}</span>
+                      <span class="product-meta">{{ product.totalSold }} vendus · {{ product.orderCount }} commandes</span>
+                    </div>
+                    <span class="product-revenue">{{ formatCurrency(product.revenue) }}</span>
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+
+        <!-- Recent Sales -->
+        @if (productStats.recentSales.length > 0) {
+          <mat-card class="insights-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>history</mat-icon>
+                Ventes récentes
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="recent-sales-list">
+                @for (sale of productStats.recentSales.slice(0, 5); track sale.orderId + sale.productId) {
+                  <div class="sale-item">
+                    <div class="sale-info">
+                      <span class="sale-product">{{ sale.productName }}</span>
+                      <span class="sale-customer">{{ sale.customerName }} · {{ sale.quantity }}x</span>
+                    </div>
+                    <div class="sale-details">
+                      <span class="sale-amount">{{ formatCurrency(sale.amount) }}</span>
+                      <span class="sale-date">{{ formatDate(sale.saleDate) }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+
     <!-- Header avec bouton ajouter -->
     <div class="header">
       <h1>Mes Produits</h1>

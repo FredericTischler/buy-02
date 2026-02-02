@@ -379,6 +379,172 @@ public class OrderService {
         }
     }
 
+    /**
+     * Get detailed user product statistics (most purchased products, top categories)
+     */
+    public UserProductStats getUserProductStats(String userId) {
+        List<Order> deliveredOrders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
+                .collect(Collectors.toList());
+
+        // Aggregate product purchases
+        java.util.Map<String, UserProductStats.ProductPurchaseInfo> productMap = new java.util.HashMap<>();
+
+        for (Order order : deliveredOrders) {
+            for (OrderItem item : order.getItems()) {
+                String productId = item.getProductId();
+                UserProductStats.ProductPurchaseInfo existing = productMap.get(productId);
+
+                if (existing == null) {
+                    existing = new UserProductStats.ProductPurchaseInfo(
+                            productId,
+                            item.getProductName(),
+                            item.getSellerId(),
+                            item.getSellerName(),
+                            item.getQuantity(),
+                            item.getSubtotal(),
+                            order.getDeliveredAt() != null ? order.getDeliveredAt() : order.getCreatedAt(),
+                            item.getImageUrl()
+                    );
+                } else {
+                    existing.setTotalQuantity(existing.getTotalQuantity() + item.getQuantity());
+                    existing.setTotalSpent(existing.getTotalSpent() + item.getSubtotal());
+                    LocalDateTime orderDate = order.getDeliveredAt() != null ? order.getDeliveredAt() : order.getCreatedAt();
+                    if (orderDate.isAfter(existing.getLastPurchased())) {
+                        existing.setLastPurchased(orderDate);
+                    }
+                }
+                productMap.put(productId, existing);
+            }
+        }
+
+        // Sort by total quantity (most purchased first) and limit to top 10
+        List<UserProductStats.ProductPurchaseInfo> mostPurchased = productMap.values().stream()
+                .sorted((a, b) -> Integer.compare(b.getTotalQuantity(), a.getTotalQuantity()))
+                .limit(10)
+                .collect(Collectors.toList());
+
+        // Calculate category statistics (using seller name as proxy for category since we don't have category in OrderItem)
+        java.util.Map<String, UserProductStats.CategoryStats> categoryMap = new java.util.HashMap<>();
+
+        for (Order order : deliveredOrders) {
+            java.util.Set<String> orderSellers = new java.util.HashSet<>();
+            for (OrderItem item : order.getItems()) {
+                String sellerName = item.getSellerName() != null ? item.getSellerName() : "Unknown";
+                orderSellers.add(sellerName);
+
+                UserProductStats.CategoryStats catStats = categoryMap.getOrDefault(sellerName,
+                        new UserProductStats.CategoryStats(sellerName, 0, 0, 0.0));
+                catStats.setItemCount(catStats.getItemCount() + item.getQuantity());
+                catStats.setTotalSpent(catStats.getTotalSpent() + item.getSubtotal());
+                categoryMap.put(sellerName, catStats);
+            }
+            // Increment order count for each seller in this order
+            for (String seller : orderSellers) {
+                UserProductStats.CategoryStats catStats = categoryMap.get(seller);
+                catStats.setOrderCount(catStats.getOrderCount() + 1);
+            }
+        }
+
+        List<UserProductStats.CategoryStats> topCategories = categoryMap.values().stream()
+                .sorted((a, b) -> Double.compare(b.getTotalSpent(), a.getTotalSpent()))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        int totalUniqueProducts = productMap.size();
+        int totalItemsPurchased = productMap.values().stream()
+                .mapToInt(UserProductStats.ProductPurchaseInfo::getTotalQuantity)
+                .sum();
+
+        return new UserProductStats(mostPurchased, topCategories, totalUniqueProducts, totalItemsPurchased);
+    }
+
+    /**
+     * Get detailed seller product statistics (best selling products, recent sales)
+     */
+    public SellerProductStats getSellerProductStats(String sellerId) {
+        List<Order> sellerOrders = orderRepository.findBySellerId(sellerId);
+
+        List<Order> deliveredOrders = sellerOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
+                .collect(Collectors.toList());
+
+        // Aggregate best selling products
+        java.util.Map<String, SellerProductStats.BestSellingProduct> productMap = new java.util.HashMap<>();
+        java.util.Set<String> uniqueCustomers = new java.util.HashSet<>();
+
+        for (Order order : deliveredOrders) {
+            uniqueCustomers.add(order.getUserId());
+            java.util.Set<String> orderProducts = new java.util.HashSet<>();
+
+            for (OrderItem item : order.getItems()) {
+                if (!item.getSellerId().equals(sellerId)) continue;
+
+                String productId = item.getProductId();
+                orderProducts.add(productId);
+
+                SellerProductStats.BestSellingProduct existing = productMap.get(productId);
+
+                if (existing == null) {
+                    existing = new SellerProductStats.BestSellingProduct(
+                            productId,
+                            item.getProductName(),
+                            item.getQuantity(),
+                            item.getSubtotal(),
+                            0, // Will increment order count below
+                            item.getImageUrl()
+                    );
+                } else {
+                    existing.setTotalSold(existing.getTotalSold() + item.getQuantity());
+                    existing.setRevenue(existing.getRevenue() + item.getSubtotal());
+                }
+                productMap.put(productId, existing);
+            }
+
+            // Increment order count for products in this order
+            for (String productId : orderProducts) {
+                SellerProductStats.BestSellingProduct product = productMap.get(productId);
+                if (product != null) {
+                    product.setOrderCount(product.getOrderCount() + 1);
+                }
+            }
+        }
+
+        // Sort by total sold (best selling first) and limit to top 10
+        List<SellerProductStats.BestSellingProduct> bestSelling = productMap.values().stream()
+                .sorted((a, b) -> Integer.compare(b.getTotalSold(), a.getTotalSold()))
+                .limit(10)
+                .collect(Collectors.toList());
+
+        // Get recent sales (last 10 sales across all orders)
+        List<SellerProductStats.RecentSale> recentSales = sellerOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED || o.getStatus() == OrderStatus.SHIPPED)
+                .sorted((a, b) -> {
+                    LocalDateTime dateA = a.getDeliveredAt() != null ? a.getDeliveredAt() : a.getCreatedAt();
+                    LocalDateTime dateB = b.getDeliveredAt() != null ? b.getDeliveredAt() : b.getCreatedAt();
+                    return dateB.compareTo(dateA);
+                })
+                .flatMap(order -> order.getItems().stream()
+                        .filter(item -> item.getSellerId().equals(sellerId))
+                        .map(item -> new SellerProductStats.RecentSale(
+                                order.getId(),
+                                item.getProductId(),
+                                item.getProductName(),
+                                order.getUserName(),
+                                item.getQuantity(),
+                                item.getSubtotal(),
+                                order.getDeliveredAt() != null ? order.getDeliveredAt() : order.getCreatedAt()
+                        )))
+                .limit(10)
+                .collect(Collectors.toList());
+
+        int totalUniqueProductsSold = productMap.size();
+        int totalCustomers = uniqueCustomers.size();
+
+        return new SellerProductStats(bestSelling, recentSales, totalUniqueProductsSold, totalCustomers);
+    }
+
     // Stats DTOs
     public record UserOrderStats(long totalOrders, long completedOrders, double totalSpent) {}
     public record SellerOrderStats(long totalOrders, long completedOrders, double totalRevenue, long totalItemsSold) {}

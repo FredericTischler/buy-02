@@ -104,6 +104,79 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- Most Purchased Products Card -->
+    @if (productStats && productStats.mostPurchasedProducts.length > 0) {
+      <mat-card class="products-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>favorite</mat-icon>
+            Mes produits préférés
+          </mat-card-title>
+          <mat-card-subtitle>
+            {{ productStats.totalUniqueProducts }} produits achetés ({{ productStats.totalItemsPurchased }} articles)
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (productStatsLoading) {
+            <div class="stats-loading">
+              <mat-spinner diameter="30"></mat-spinner>
+            </div>
+          } @else {
+            <div class="products-list">
+              @for (product of productStats.mostPurchasedProducts; track product.productId) {
+                <div class="product-item" (click)="goToProduct(product.productId)">
+                  <div class="product-image">
+                    @if (product.imageUrl) {
+                      <img [src]="getProductImageUrl(product.imageUrl)" [alt]="product.productName" />
+                    } @else {
+                      <mat-icon class="no-image">inventory_2</mat-icon>
+                    }
+                  </div>
+                  <div class="product-info">
+                    <span class="product-name">{{ product.productName }}</span>
+                    <span class="product-seller">{{ product.sellerName }}</span>
+                  </div>
+                  <div class="product-stats">
+                    <span class="quantity-badge">{{ product.totalQuantity }}x</span>
+                    <span class="total-spent">{{ formatCurrency(product.totalSpent) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Top Sellers Card -->
+    @if (productStats && productStats.topCategories.length > 0) {
+      <mat-card class="categories-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>storefront</mat-icon>
+            Mes vendeurs préférés
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="categories-list">
+            @for (category of productStats.topCategories; track category.category) {
+              <div class="category-item">
+                <div class="category-info">
+                  <mat-icon>store</mat-icon>
+                  <span class="category-name">{{ category.category }}</span>
+                </div>
+                <div class="category-stats">
+                  <span class="order-count">{{ category.orderCount }} commandes</span>
+                  <span class="item-count">{{ category.itemCount }} articles</span>
+                  <span class="total-spent">{{ formatCurrency(category.totalSpent) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
     <!-- Quick Actions Card -->
     <mat-card class="actions-card">
       <mat-card-header>

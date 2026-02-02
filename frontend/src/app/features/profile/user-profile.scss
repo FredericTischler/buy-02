@@ -224,6 +224,182 @@
   }
 }
 
+// Products Card (Most Purchased)
+.products-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #e91e63;
+      }
+    }
+
+    mat-card-subtitle {
+      margin-top: 4px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .product-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background-color: #fafafa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f0f0f0;
+      transform: translateX(4px);
+    }
+
+    .product-image {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .no-image {
+        color: #9e9e9e;
+        font-size: 28px;
+      }
+    }
+
+    .product-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+
+      .product-name {
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.87);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .product-seller {
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .product-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+
+      .quantity-badge {
+        background-color: #3f51b5;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .total-spent {
+        font-size: 14px;
+        font-weight: 600;
+        color: #4caf50;
+      }
+    }
+  }
+}
+
+// Categories/Sellers Card
+.categories-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #9c27b0;
+      }
+    }
+  }
+
+  .categories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .category-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background-color: #f5f5f5;
+
+    .category-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      mat-icon {
+        color: #9c27b0;
+      }
+
+      .category-name {
+        font-weight: 500;
+        color: rgba(0, 0, 0, 0.87);
+      }
+    }
+
+    .category-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .order-count,
+      .item-count {
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .total-spent {
+        font-weight: 600;
+        color: #4caf50;
+      }
+    }
+  }
+}
+
 // Actions Card
 .actions-card {
   mat-card-header {
@@ -299,6 +475,28 @@
       button {
         width: 100%;
         justify-content: center;
+      }
+    }
+  }
+
+  .products-card {
+    .product-item {
+      .product-stats {
+        flex-direction: row;
+        gap: 12px;
+      }
+    }
+  }
+
+  .categories-card {
+    .category-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+
+      .category-stats {
+        flex-wrap: wrap;
+        gap: 8px;
       }
     }
   }
