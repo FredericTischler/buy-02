@@ -59,6 +59,17 @@ export class ProductList implements OnInit {
   maxPrice: number | null = null;
   showFilters = false;
 
+  // Tri
+  sortBy: 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc' | 'newest' | 'stock' = 'newest';
+  sortOptions = [
+    { value: 'newest', label: 'Plus récents' },
+    { value: 'price-asc', label: 'Prix croissant' },
+    { value: 'price-desc', label: 'Prix décroissant' },
+    { value: 'name-asc', label: 'Nom A-Z' },
+    { value: 'name-desc', label: 'Nom Z-A' },
+    { value: 'stock', label: 'Disponibilité' }
+  ];
+
   constructor(
     private readonly productService: Product,
     private readonly mediaService: MediaService,
@@ -238,7 +249,7 @@ export class ProductList implements OnInit {
   }
 
   get filteredProducts(): any[] {
-    return this.products.filter(product => {
+    let filtered = this.products.filter(product => {
       // Filtre par catégorie
       if (this.selectedCategory && product.category !== this.selectedCategory) {
         return false;
@@ -252,6 +263,32 @@ export class ProductList implements OnInit {
         return false;
       }
       return true;
+    });
+
+    // Appliquer le tri
+    return this.sortProducts(filtered);
+  }
+
+  private sortProducts(products: any[]): any[] {
+    return [...products].sort((a, b) => {
+      switch (this.sortBy) {
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'name-asc':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'name-desc':
+          return (b.name || '').localeCompare(a.name || '');
+        case 'stock':
+          return b.stock - a.stock;
+        case 'newest':
+        default:
+          // Tri par date de création (plus récent d'abord)
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+      }
     });
   }
 

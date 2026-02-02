@@ -124,6 +124,7 @@
   align-items: center;
   gap: 16px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 
   .filter-badge {
     background: #667eea;
@@ -134,10 +135,36 @@
     margin-left: 8px;
   }
 
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .sort-field {
+    width: 180px;
+    margin: 0;
+
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
+      .mat-mdc-form-field-infix {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        min-height: auto;
+      }
+    }
+  }
+
   .products-count {
-    margin-left: auto;
     color: #666;
     font-size: 14px;
+    white-space: nowrap;
   }
 }
 
@@ -290,6 +317,24 @@
 
   .content {
     padding: 15px;
+  }
+
+  .filters-header {
+    .spacer {
+      display: none;
+    }
+
+    .sort-field {
+      width: 100%;
+      order: 10;
+      margin-top: 8px;
+    }
+
+    .products-count {
+      width: 100%;
+      text-align: center;
+      order: 11;
+    }
   }
 
   .products-grid {
