@@ -1,0 +1,142 @@
+<mat-toolbar color="primary" class="profile-toolbar">
+  <button mat-icon-button (click)="goToProducts()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">Mon Profil</span>
+  <span class="toolbar-spacer"></span>
+  <button mat-icon-button (click)="goToCart()" [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">
+    <mat-icon>shopping_cart</mat-icon>
+  </button>
+  <button mat-icon-button (click)="logout()">
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div class="profile-container">
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Chargement du profil...</p>
+    </div>
+  } @else if (user) {
+    <!-- User Info Card -->
+    <mat-card class="user-card">
+      <mat-card-content>
+        <div class="user-header">
+          <div class="avatar-section">
+            @if (hasAvatar()) {
+              <img [src]="getAvatarUrl()" alt="Avatar" class="user-avatar" />
+            } @else {
+              <div class="avatar-placeholder">
+                <span>{{ getInitials() }}</span>
+              </div>
+            }
+          </div>
+          <div class="user-info">
+            <h1 class="user-name">{{ user.name }}</h1>
+            <p class="user-email">
+              <mat-icon class="info-icon">email</mat-icon>
+              {{ user.email }}
+            </p>
+            <mat-chip-set>
+              <mat-chip [highlighted]="user.role === 'SELLER'">
+                <mat-icon matChipAvatar>{{ getRoleIcon() }}</mat-icon>
+                {{ getRoleDisplay() }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+        </div>
+
+        <mat-divider class="section-divider"></mat-divider>
+
+        <div class="user-details">
+          <div class="detail-item">
+            <mat-icon>calendar_today</mat-icon>
+            <div class="detail-content">
+              <span class="detail-label">Membre depuis</span>
+              <span class="detail-value">{{ formatDate(user.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Stats Card -->
+    <mat-card class="stats-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          Mes Statistiques
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (statsLoading) {
+          <div class="stats-loading">
+            <mat-spinner diameter="30"></mat-spinner>
+          </div>
+        } @else if (stats) {
+          <div class="stats-grid">
+            <div class="stat-item">
+              <mat-icon class="stat-icon orders-icon">receipt_long</mat-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ stats.totalOrders }}</span>
+                <span class="stat-label">Commandes totales</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <mat-icon class="stat-icon completed-icon">check_circle</mat-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ stats.completedOrders }}</span>
+                <span class="stat-label">Commandes livrées</span>
+              </div>
+            </div>
+            <div class="stat-item highlight">
+              <mat-icon class="stat-icon money-icon">payments</mat-icon>
+              <div class="stat-content">
+                <span class="stat-value">{{ formatCurrency(stats.totalSpent) }}</span>
+                <span class="stat-label">Total dépensé</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <p class="no-stats">Aucune statistique disponible</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Quick Actions Card -->
+    <mat-card class="actions-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>flash_on</mat-icon>
+          Actions rapides
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="actions-grid">
+          <button mat-raised-button color="primary" (click)="goToOrders()">
+            <mat-icon>list_alt</mat-icon>
+            Mes Commandes
+          </button>
+          <button mat-raised-button (click)="goToProducts()">
+            <mat-icon>store</mat-icon>
+            Catalogue
+          </button>
+          <button mat-raised-button (click)="goToCart()">
+            <mat-icon>shopping_cart</mat-icon>
+            Mon Panier
+            @if (cartCount > 0) {
+              <span class="cart-badge">({{ cartCount }})</span>
+            }
+          </button>
+          @if (user.role === 'SELLER') {
+            <button mat-raised-button color="accent" (click)="goToDashboard()">
+              <mat-icon>dashboard</mat-icon>
+              Dashboard Vendeur
+            </button>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

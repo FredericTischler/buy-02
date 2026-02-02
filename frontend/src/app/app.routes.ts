@@ -8,6 +8,7 @@ import { Dashboard } from './features/seller/dashboard/dashboard';
 import { Checkout } from './features/orders/checkout/checkout';
 import { MyOrders } from './features/orders/my-orders/my-orders';
 import { OrderDetail } from './features/orders/order-detail/order-detail';
+import { UserProfile } from './features/profile/user-profile';
 import { authGuard } from './core/guards/auth.guard';
 import { sellerGuard } from './core/guards/seller.guard';
 import { loginGuard } from './core/guards/login.guard';
@@ -58,5 +59,10 @@ export const routes: Routes = [
     path: 'seller/dashboard',
     component: Dashboard,
     canActivate: [sellerGuard] // Protégé : nécessite d'être SELLER
+  },
+  {
+    path: 'profile',
+    component: UserProfile,
+    canActivate: [authGuard] // Protégé : nécessite d'être connecté
   },
 ];

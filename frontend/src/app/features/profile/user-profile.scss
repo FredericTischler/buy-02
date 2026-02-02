@@ -1,0 +1,305 @@
+.profile-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .toolbar-title {
+    margin-left: 8px;
+    font-weight: 500;
+  }
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.profile-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// User Card
+.user-card {
+  .user-header {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .avatar-section {
+    flex-shrink: 0;
+  }
+
+  .user-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #3f51b5;
+  }
+
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3f51b5 0%, #7986cb 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 36px;
+    font-weight: 500;
+  }
+
+  .user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .user-name {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  .user-email {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 16px;
+
+    .info-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .section-divider {
+    margin: 24px 0;
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    mat-icon {
+      color: #3f51b5;
+    }
+
+    .detail-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.87);
+    }
+  }
+}
+
+// Stats Card
+.stats-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #3f51b5;
+      }
+    }
+  }
+
+  .stats-loading {
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: #f5f5f5;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    &.highlight {
+      background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
+    }
+
+    .stat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+
+      &.orders-icon {
+        color: #3f51b5;
+      }
+
+      &.completed-icon {
+        color: #4caf50;
+      }
+
+      &.money-icon {
+        color: #ff9800;
+      }
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .no-stats {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.6);
+    padding: 24px;
+  }
+}
+
+// Actions Card
+.actions-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+
+      mat-icon {
+        color: #ff9800;
+      }
+    }
+  }
+
+  .actions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .cart-badge {
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .profile-container {
+    padding: 16px 12px;
+  }
+
+  .user-card {
+    .user-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .user-info {
+      align-items: center;
+    }
+
+    .user-name {
+      font-size: 24px;
+    }
+  }
+
+  .stats-card {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stat-item {
+      .stat-value {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .actions-card {
+    .actions-grid {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}

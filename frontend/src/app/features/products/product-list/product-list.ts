@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Product } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
@@ -31,7 +32,8 @@ import { catchError, map } from 'rxjs/operators';
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatTooltipModule
   ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
@@ -209,5 +211,9 @@ export class ProductList implements OnInit {
 
   goToCart(): void {
     this.router.navigate(['/cart']);
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 }

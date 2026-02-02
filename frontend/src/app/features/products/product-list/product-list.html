@@ -16,7 +16,12 @@
     <button mat-icon-button class="cart-button" (click)="goToCart()">
       <mat-icon [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">shopping_cart</mat-icon>
     </button>
-    
+
+    <!-- Bouton Profil -->
+    <button mat-icon-button (click)="goToProfile()" matTooltip="Mon Profil">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+
     <!-- Bouton déconnexion -->
     <button mat-raised-button color="warn" (click)="logout()">
       <mat-icon>logout</mat-icon>
