@@ -1,3 +1,20 @@
+<mat-toolbar color="primary" class="detail-toolbar">
+  <button mat-icon-button (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">Détail de la commande</span>
+  <span class="toolbar-spacer"></span>
+  <button mat-icon-button (click)="goToProducts()" matTooltip="Catalogue">
+    <mat-icon>store</mat-icon>
+  </button>
+  <button mat-icon-button (click)="goToCart()" [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">
+    <mat-icon>shopping_cart</mat-icon>
+  </button>
+  <button mat-icon-button (click)="goToProfile()" matTooltip="Mon Profil">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+</mat-toolbar>
+
 <div class="order-detail-container">
   @if (isLoading) {
     <div class="loading-container">
@@ -6,9 +23,6 @@
   } @else if (order) {
     <!-- Header -->
     <div class="order-header">
-      <button mat-icon-button (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
       <div class="header-info">
         <h1>Commande #{{ order.id.slice(0, 8) }}</h1>
         <span class="order-date">Passée le {{ formatDate(order.createdAt) }}</span>

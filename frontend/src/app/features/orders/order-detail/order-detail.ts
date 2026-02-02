@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,8 +10,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { OrderService } from '../../../core/services/order';
+import { Cart } from '../../../core/services/cart';
 import { Order, OrderStatus } from '../../../core/models/order.model';
 
 @Component({
@@ -25,7 +30,10 @@ import { Order, OrderStatus } from '../../../core/models/order.model';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatSnackBarModule,
-    MatStepperModule
+    MatStepperModule,
+    MatToolbarModule,
+    MatBadgeModule,
+    MatTooltipModule
   ],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss'
@@ -33,6 +41,7 @@ import { Order, OrderStatus } from '../../../core/models/order.model';
 export class OrderDetail implements OnInit {
   order: Order | null = null;
   isLoading = true;
+  cartCount = 0;
 
   statusSteps = [
     { status: OrderStatus.PENDING, label: 'En attente', icon: 'hourglass_empty' },
@@ -45,7 +54,9 @@ export class OrderDetail implements OnInit {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly location: Location,
     private readonly orderService: OrderService,
+    private readonly cartService: Cart,
     private readonly snackBar: MatSnackBar
   ) {}
 
@@ -54,6 +65,26 @@ export class OrderDetail implements OnInit {
     if (orderId) {
       this.loadOrder(orderId);
     }
+    this.updateCartCount();
+    this.cartService.cartItems$.subscribe(() => {
+      this.updateCartCount();
+    });
+  }
+
+  updateCartCount(): void {
+    this.cartCount = this.cartService.getCartCount();
+  }
+
+  goToProducts(): void {
+    this.router.navigate(['/products']);
+  }
+
+  goToCart(): void {
+    this.router.navigate(['/cart']);
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 
   loadOrder(orderId: string): void {
@@ -142,6 +173,6 @@ export class OrderDetail implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/orders']);
+    this.location.back();
   }
 }

@@ -11,6 +11,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Cart } from '../../../core/services/cart';
 import { OrderService } from '../../../core/services/order';
@@ -31,7 +33,9 @@ import { OrderRequest, OrderItemRequest } from '../../../core/models/order.model
     MatSelectModule,
     MatDividerModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatToolbarModule,
+    MatTooltipModule
   ],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss'
@@ -143,5 +147,13 @@ export class Checkout implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/cart']);
+  }
+
+  goToProducts(): void {
+    this.router.navigate(['/products']);
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 }
