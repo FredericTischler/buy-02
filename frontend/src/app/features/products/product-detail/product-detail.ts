@@ -11,6 +11,7 @@ import { Product as ProductModel } from '../../../core/models/product.model';
 import { Product } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
+import { WishlistService } from '../../../core/services/wishlist';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -43,6 +44,7 @@ export class ProductDetail implements OnInit {
     private readonly productService: Product,
     private readonly mediaService: MediaService,
     private readonly cartService: Cart,
+    private readonly wishlistService: WishlistService,
     private readonly snackBar: MatSnackBar
   ) {}
 
@@ -179,5 +181,30 @@ export class ProductDetail implements OnInit {
     if (this.product.stock === 0) return 'out-of-stock';
     if (this.product.stock < 10) return 'low-stock';
     return 'in-stock';
+  }
+
+  isInWishlist(): boolean {
+    return this.product ? this.wishlistService.isInWishlistSync(this.product.id) : false;
+  }
+
+  toggleWishlist(): void {
+    if (!this.product) return;
+
+    this.wishlistService.toggleWishlist(this.product.id).subscribe({
+      next: () => {
+        const action = this.isInWishlist() ? 'ajouté à' : 'retiré de';
+        this.snackBar.open(`${this.product!.name} ${action} la wishlist`, 'Fermer', {
+          duration: 2000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom'
+        });
+      },
+      error: () => {
+        this.snackBar.open('Erreur lors de la mise à jour de la wishlist', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
   }
 }

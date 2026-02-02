@@ -130,14 +130,22 @@
 
             <!-- Add to Cart Button -->
             <div class="actions">
-              <button 
-                mat-raised-button 
-                color="primary" 
+              <button
+                mat-raised-button
+                color="primary"
                 class="add-to-cart-btn"
                 (click)="addToCart()"
                 [disabled]="product.stock === 0">
                 <mat-icon>shopping_cart</mat-icon>
                 {{ product.stock > 0 ? 'Ajouter au panier' : 'Rupture de stock' }}
+              </button>
+              <button
+                mat-stroked-button
+                class="wishlist-btn"
+                [class.in-wishlist]="isInWishlist()"
+                (click)="toggleWishlist()">
+                <mat-icon>{{ isInWishlist() ? 'favorite' : 'favorite_border' }}</mat-icon>
+                {{ isInWishlist() ? 'Dans la wishlist' : 'Ajouter à la wishlist' }}
               </button>
             </div>
           </mat-card-content>

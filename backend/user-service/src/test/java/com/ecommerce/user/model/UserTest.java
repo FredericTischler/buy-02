@@ -2,6 +2,8 @@ package com.ecommerce.user.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class UserTest {
@@ -17,11 +19,14 @@ class UserTest {
             .isNotNull();
         assertThat(user.getUpdatedAt())
             .isNotNull();
+        assertThat(user.getWishlist())
+            .isNotNull()
+            .isEmpty();
     }
 
     @Test
     void allArgsConstructorShouldExposeValues() {
-        User user = new User("id", "Bob", "bob@mail.com", "pwd", Role.SELLER, "/a.png", null, null);
+        User user = new User("id", "Bob", "bob@mail.com", "pwd", Role.SELLER, "/a.png", null, null, new ArrayList<>());
 
         assertThat(user)
             .extracting(User::getId, User::getAvatar)
@@ -30,8 +35,8 @@ class UserTest {
 
     @Test
     void equalsAndHashCodeShouldDependOnFields() {
-        User first = new User("id", "Bob", "bob@mail.com", "pwd", Role.SELLER, "/a.png", null, null);
-        User second = new User("id", "Bob", "bob@mail.com", "pwd", Role.SELLER, "/a.png", null, null);
+        User first = new User("id", "Bob", "bob@mail.com", "pwd", Role.SELLER, "/a.png", null, null, new ArrayList<>());
+        User second = new User("id", "Bob", "bob@mail.com", "pwd", Role.SELLER, "/a.png", null, null, new ArrayList<>());
 
         assertThat(first)
             .isEqualTo(second)

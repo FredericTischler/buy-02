@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, forwardRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/user.model';
 import { Cart } from './cart';
 import { resolveApiBase } from '../utils/api-host';
+import { WishlistService } from './wishlist';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +20,8 @@ export class Auth {
 
   constructor(
     private readonly http: HttpClient,
-    private readonly cartService: Cart
+    private readonly cartService: Cart,
+    @Inject(forwardRef(() => WishlistService)) private readonly wishlistService: WishlistService
   ) { }
 
   /**
@@ -48,6 +50,8 @@ export class Auth {
           this.currentUserSubject.next(user);
           // Recharger le panier de l'utilisateur connecté
           this.cartService.loadCart();
+          // Recharger la wishlist de l'utilisateur connecté
+          this.wishlistService.loadWishlist();
         })
       );
   }
@@ -61,6 +65,8 @@ export class Auth {
     this.currentUserSubject.next(null);
     // Vider le panier en mémoire (mais pas supprimer du localStorage)
     this.cartService.clearCartOnLogout();
+    // Réinitialiser la wishlist
+    this.wishlistService.resetWishlist();
   }
 
   /**

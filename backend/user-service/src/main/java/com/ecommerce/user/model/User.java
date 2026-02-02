@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ENTITÉ USER
@@ -64,7 +66,12 @@ public class User {
      * Date de dernière modification du profil
      */
     private LocalDateTime updatedAt;
-    
+
+    /**
+     * Liste des IDs de produits dans la wishlist
+     */
+    private List<String> wishlist = new ArrayList<>();
+
     /**
      * Constructeur personnalisé pour la création d'un nouvel utilisateur
      */
@@ -75,5 +82,6 @@ public class User {
         this.role = role;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.wishlist = new ArrayList<>();
     }
 }

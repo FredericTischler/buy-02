@@ -16,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -281,11 +283,99 @@ public class UserService {
     
     /**
      * VÉRIFIER SI UN EMAIL EXISTE
-     * 
+     *
      * @param email Email à vérifier
      * @return true si existe, false sinon
      */
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    // ==================== WISHLIST ====================
+
+    /**
+     * RÉCUPÉRER LA WISHLIST D'UN UTILISATEUR
+     *
+     * @param email Email de l'utilisateur
+     * @return Liste des IDs de produits
+     */
+    public List<String> getWishlist(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        return user.getWishlist() != null ? user.getWishlist() : new ArrayList<>();
+    }
+
+    /**
+     * AJOUTER UN PRODUIT À LA WISHLIST
+     *
+     * @param email Email de l'utilisateur
+     * @param productId ID du produit à ajouter
+     * @return Liste mise à jour
+     */
+    public List<String> addToWishlist(String email, String productId) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        if (user.getWishlist() == null) {
+            user.setWishlist(new ArrayList<>());
+        }
+
+        // Vérifier si le produit n'est pas déjà dans la wishlist
+        if (!user.getWishlist().contains(productId)) {
+            user.getWishlist().add(productId);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
+
+        return user.getWishlist();
+    }
+
+    /**
+     * SUPPRIMER UN PRODUIT DE LA WISHLIST
+     *
+     * @param email Email de l'utilisateur
+     * @param productId ID du produit à supprimer
+     * @return Liste mise à jour
+     */
+    public List<String> removeFromWishlist(String email, String productId) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        if (user.getWishlist() != null) {
+            user.getWishlist().remove(productId);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
+
+        return user.getWishlist() != null ? user.getWishlist() : new ArrayList<>();
+    }
+
+    /**
+     * VÉRIFIER SI UN PRODUIT EST DANS LA WISHLIST
+     *
+     * @param email Email de l'utilisateur
+     * @param productId ID du produit
+     * @return true si présent, false sinon
+     */
+    public boolean isInWishlist(String email, String productId) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        return user.getWishlist() != null && user.getWishlist().contains(productId);
+    }
+
+    /**
+     * VIDER LA WISHLIST
+     *
+     * @param email Email de l'utilisateur
+     */
+    public void clearWishlist(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        user.setWishlist(new ArrayList<>());
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 }

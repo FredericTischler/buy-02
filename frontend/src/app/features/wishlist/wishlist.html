@@ -1,0 +1,105 @@
+<div class="wishlist-container">
+  <!-- Header -->
+  <mat-toolbar color="primary" class="toolbar">
+    <button mat-icon-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <span class="title">Ma Wishlist</span>
+    <span class="spacer"></span>
+    <button mat-icon-button (click)="goToCart()" matTooltip="Mon Panier">
+      <mat-icon>shopping_cart</mat-icon>
+    </button>
+    @if (products.length > 0) {
+      <button mat-stroked-button color="warn" (click)="clearWishlist()">
+        <mat-icon>delete_sweep</mat-icon>
+        Vider
+      </button>
+    }
+  </mat-toolbar>
+
+  <!-- Contenu -->
+  <div class="content">
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Chargement de la wishlist...</p>
+      </div>
+    } @else if (errorMessage) {
+      <div class="error-container">
+        <mat-icon>error</mat-icon>
+        <p>{{ errorMessage }}</p>
+      </div>
+    } @else if (products.length === 0) {
+      <div class="empty-container">
+        <mat-icon>favorite_border</mat-icon>
+        <h2>Votre wishlist est vide</h2>
+        <p>Ajoutez des produits que vous aimez pour les retrouver ici</p>
+        <button mat-raised-button color="primary" (click)="goBack()">
+          <mat-icon>shopping_bag</mat-icon>
+          Parcourir les produits
+        </button>
+      </div>
+    } @else {
+      <div class="products-grid">
+        @for (product of products; track product.id) {
+          <mat-card class="product-card">
+            <!-- Bouton supprimer -->
+            <button
+              mat-icon-button
+              class="remove-btn"
+              (click)="removeFromWishlist(product)"
+              matTooltip="Retirer de la wishlist">
+              <mat-icon>close</mat-icon>
+            </button>
+
+            <!-- Image du produit -->
+            @if (product.imageUrl) {
+              <img mat-card-image [src]="product.imageUrl" [alt]="product.name" class="product-image" (click)="viewDetails(product.id)">
+            } @else {
+              <div class="no-image" (click)="viewDetails(product.id)">
+                <mat-icon>image</mat-icon>
+                <span>Pas d'image</span>
+              </div>
+            }
+
+            <mat-card-header>
+              <mat-card-title>{{ product.name }}</mat-card-title>
+              <mat-card-subtitle>{{ product.category }}</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+              <p class="description">{{ product.description }}</p>
+              <div class="product-info">
+                <span class="price">{{ product.price | currency:'EUR' }}</span>
+                <span class="stock" [class.out-of-stock]="product.stock === 0" [class.low-stock]="product.stock > 0 && product.stock < 10">
+                  @if (product.stock === 0) {
+                    Rupture de stock
+                  } @else if (product.stock < 10) {
+                    Stock: {{ product.stock }}
+                  } @else {
+                    En stock
+                  }
+                </span>
+              </div>
+            </mat-card-content>
+
+            <mat-card-actions>
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="addToCart(product)"
+                [disabled]="product.stock === 0">
+                <mat-icon>shopping_cart</mat-icon>
+                Ajouter au panier
+              </button>
+              <button mat-button color="accent" (click)="viewDetails(product.id)">
+                <mat-icon>visibility</mat-icon>
+                Voir
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  </div>
+</div>

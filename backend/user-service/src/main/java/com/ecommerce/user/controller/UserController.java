@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -157,19 +158,19 @@ public class UserController {
     
     /**
      * API : RÉCUPÉRER UN UTILISATEUR PAR ID
-     * 
+     *
      * GET /api/users/{id}
      * Header: Authorization: Bearer <token>
-     * 
+     *
      * Utile pour les autres services (Product Service peut vérifier qu'un seller existe)
-     * 
+     *
      * Réponse (200) : UserResponse
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable String id) {
         try {
             Optional<User> userOptional = userService.getUserById(id);
-            
+
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
                 UserResponse response = new UserResponse(
@@ -187,11 +188,142 @@ public class UserController {
                 error.put("error", "Utilisateur non trouvé");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
             }
-                
+
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    // ==================== WISHLIST ====================
+
+    /**
+     * API : RÉCUPÉRER LA WISHLIST
+     *
+     * GET /api/users/wishlist
+     * Header: Authorization: Bearer <token>
+     *
+     * Réponse (200) : Liste des IDs de produits
+     */
+    @GetMapping("/wishlist")
+    public ResponseEntity<?> getWishlist() {
+        try {
+            String email = getCurrentUserEmail();
+            List<String> wishlist = userService.getWishlist(email);
+
+            return ResponseEntity.ok(wishlist);
+
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * API : AJOUTER UN PRODUIT À LA WISHLIST
+     *
+     * POST /api/users/wishlist/{productId}
+     * Header: Authorization: Bearer <token>
+     *
+     * Réponse (200) : Liste mise à jour
+     */
+    @PostMapping("/wishlist/{productId}")
+    public ResponseEntity<?> addToWishlist(@PathVariable String productId) {
+        try {
+            String email = getCurrentUserEmail();
+            List<String> wishlist = userService.addToWishlist(email, productId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Produit ajouté à la wishlist");
+            response.put("wishlist", wishlist);
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * API : SUPPRIMER UN PRODUIT DE LA WISHLIST
+     *
+     * DELETE /api/users/wishlist/{productId}
+     * Header: Authorization: Bearer <token>
+     *
+     * Réponse (200) : Liste mise à jour
+     */
+    @DeleteMapping("/wishlist/{productId}")
+    public ResponseEntity<?> removeFromWishlist(@PathVariable String productId) {
+        try {
+            String email = getCurrentUserEmail();
+            List<String> wishlist = userService.removeFromWishlist(email, productId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Produit retiré de la wishlist");
+            response.put("wishlist", wishlist);
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * API : VÉRIFIER SI UN PRODUIT EST DANS LA WISHLIST
+     *
+     * GET /api/users/wishlist/check/{productId}
+     * Header: Authorization: Bearer <token>
+     *
+     * Réponse (200) : { "inWishlist": true/false }
+     */
+    @GetMapping("/wishlist/check/{productId}")
+    public ResponseEntity<?> checkWishlist(@PathVariable String productId) {
+        try {
+            String email = getCurrentUserEmail();
+            boolean inWishlist = userService.isInWishlist(email, productId);
+
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("inWishlist", inWishlist);
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * API : VIDER LA WISHLIST
+     *
+     * DELETE /api/users/wishlist
+     * Header: Authorization: Bearer <token>
+     *
+     * Réponse (200) : Message de confirmation
+     */
+    @DeleteMapping("/wishlist")
+    public ResponseEntity<?> clearWishlist() {
+        try {
+            String email = getCurrentUserEmail();
+            userService.clearWishlist(email);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Wishlist vidée");
+
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 }

@@ -4,6 +4,7 @@ import { Register } from './features/auth/register/register';
 import { ProductList } from './features/products/product-list/product-list';
 import { ProductDetail } from './features/products/product-detail/product-detail';
 import { CartPage } from './features/cart/cart';
+import { WishlistPage } from './features/wishlist/wishlist';
 import { Dashboard } from './features/seller/dashboard/dashboard';
 import { SellerOrders } from './features/seller/seller-orders/seller-orders';
 import { Checkout } from './features/orders/checkout/checkout';
@@ -39,6 +40,11 @@ export const routes: Routes = [
   {
     path: 'cart',
     component: CartPage,
+    canActivate: [authGuard] // Protégé : nécessite d'être connecté
+  },
+  {
+    path: 'wishlist',
+    component: WishlistPage,
     canActivate: [authGuard] // Protégé : nécessite d'être connecté
   },
   {

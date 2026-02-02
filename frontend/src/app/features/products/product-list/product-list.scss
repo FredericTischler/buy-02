@@ -199,10 +199,33 @@
   flex-direction: column;
   transition: transform 0.2s, box-shadow 0.2s;
   overflow: hidden;
+  position: relative;
 
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  }
+
+  .wishlist-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background-color: white;
+    }
+
+    mat-icon {
+      color: #9ca3af;
+      transition: color 0.2s;
+
+      &.in-wishlist {
+        color: #ef4444;
+      }
+    }
   }
 
   .product-image {

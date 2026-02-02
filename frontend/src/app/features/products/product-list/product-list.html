@@ -12,6 +12,11 @@
       <mat-icon matPrefix>search</mat-icon>
     </mat-form-field>
 
+    <!-- Bouton Wishlist avec badge -->
+    <button mat-icon-button (click)="goToWishlist()" matTooltip="Ma Wishlist">
+      <mat-icon [matBadge]="wishlistCount" matBadgeColor="accent" [matBadgeHidden]="wishlistCount === 0">favorite</mat-icon>
+    </button>
+
     <!-- Bouton Panier avec badge -->
     <button mat-icon-button class="cart-button" (click)="goToCart()">
       <mat-icon [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">shopping_cart</mat-icon>
@@ -132,6 +137,17 @@
           <div class="products-grid">
             @for (product of filteredProducts; track product.id) {
             <mat-card class="product-card">
+              <!-- Bouton Wishlist -->
+              <button
+                mat-icon-button
+                class="wishlist-btn"
+                (click)="toggleWishlist(product, $event)"
+                [matTooltip]="isInWishlist(product.id) ? 'Retirer de la wishlist' : 'Ajouter à la wishlist'">
+                <mat-icon [class.in-wishlist]="isInWishlist(product.id)">
+                  {{ isInWishlist(product.id) ? 'favorite' : 'favorite_border' }}
+                </mat-icon>
+              </button>
+
               <!-- Image du produit -->
               @if (product.imageUrl) {
                 <img mat-card-image [src]="product.imageUrl" [alt]="product.name" class="product-image">

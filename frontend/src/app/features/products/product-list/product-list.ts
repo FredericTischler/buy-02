@@ -20,6 +20,7 @@ import { Product } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
 import { Auth } from '../../../core/services/auth';
+import { WishlistService } from '../../../core/services/wishlist';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -52,6 +53,7 @@ export class ProductList implements OnInit {
   errorMessage = '';
   searchKeyword = '';
   cartCount = 0;
+  wishlistCount = 0;
 
   // Filtres
   selectedCategory = '';
@@ -75,6 +77,7 @@ export class ProductList implements OnInit {
     private readonly mediaService: MediaService,
     private readonly cartService: Cart,
     private readonly authService: Auth,
+    private readonly wishlistService: WishlistService,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar
   ) {}
@@ -82,8 +85,12 @@ export class ProductList implements OnInit {
   ngOnInit(): void {
     this.loadProducts();
     this.updateCartCount();
+    this.updateWishlistCount();
     this.cartService.cartItems$.subscribe(() => {
       this.updateCartCount();
+    });
+    this.wishlistService.wishlist$.subscribe(() => {
+      this.updateWishlistCount();
     });
   }
 
@@ -189,6 +196,38 @@ export class ProductList implements OnInit {
 
   updateCartCount(): void {
     this.cartCount = this.cartService.getCartCount();
+  }
+
+  updateWishlistCount(): void {
+    this.wishlistCount = this.wishlistService.getWishlistCount();
+  }
+
+  isInWishlist(productId: string): boolean {
+    return this.wishlistService.isInWishlistSync(productId);
+  }
+
+  toggleWishlist(product: any, event: Event): void {
+    event.stopPropagation();
+    this.wishlistService.toggleWishlist(product.id).subscribe({
+      next: (response) => {
+        const action = this.isInWishlist(product.id) ? 'ajouté à' : 'retiré de';
+        this.snackBar.open(`${product.name} ${action} la wishlist`, 'Fermer', {
+          duration: 2000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom'
+        });
+      },
+      error: (error) => {
+        this.snackBar.open('Erreur lors de la mise à jour de la wishlist', 'Fermer', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  goToWishlist(): void {
+    this.router.navigate(['/wishlist']);
   }
 
   addToCart(product: any): void {
