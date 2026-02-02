@@ -1,7 +1,8 @@
 .detail-container {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 20px;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .loading-container,
@@ -36,7 +37,8 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  gap: 32px;
+  align-items: start;
 }
 
 .gallery-section {
@@ -132,7 +134,11 @@
 
 .info-section {
   mat-card {
-    padding: 30px;
+    padding: 0;
+
+    mat-card-content {
+      padding: 24px;
+    }
   }
 
   .header {
@@ -298,12 +304,12 @@
 
 @media (max-width: 600px) {
   .detail-container {
-    padding: 10px;
+    padding: 12px;
   }
 
   .info-section {
-    mat-card {
-      padding: 20px;
+    mat-card mat-card-content {
+      padding: 16px;
     }
 
     .header h1 {

@@ -1,0 +1,122 @@
+<div class="checkout-container">
+  <mat-card class="checkout-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>shopping_cart_checkout</mat-icon>
+        Finaliser la commande
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (isLoading) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else {
+        <div class="checkout-layout">
+          <!-- Order Summary -->
+          <div class="order-summary">
+            <h3>Récapitulatif de la commande</h3>
+            <div class="cart-items">
+              @for (item of cartItems; track item.productId) {
+                <div class="cart-item">
+                  <div class="item-info">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-qty">x{{ item.quantity }}</span>
+                  </div>
+                  <span class="item-price">{{ item.price * item.quantity | currency:'EUR' }}</span>
+                </div>
+              }
+            </div>
+            <mat-divider></mat-divider>
+            <div class="total-row">
+              <span>Total</span>
+              <span class="total-amount">{{ cartTotal | currency:'EUR' }}</span>
+            </div>
+          </div>
+
+          <!-- Shipping Form -->
+          <div class="shipping-form">
+            <h3>Informations de livraison</h3>
+            <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Adresse de livraison</mat-label>
+                <textarea matInput formControlName="shippingAddress" rows="2"
+                          placeholder="Numéro et nom de rue"></textarea>
+                @if (checkoutForm.get('shippingAddress')?.hasError('required') && checkoutForm.get('shippingAddress')?.touched) {
+                  <mat-error>L'adresse est requise</mat-error>
+                }
+              </mat-form-field>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Ville</mat-label>
+                  <input matInput formControlName="shippingCity" placeholder="Paris">
+                  @if (checkoutForm.get('shippingCity')?.hasError('required') && checkoutForm.get('shippingCity')?.touched) {
+                    <mat-error>La ville est requise</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Code postal</mat-label>
+                  <input matInput formControlName="shippingPostalCode" placeholder="75001">
+                  @if (checkoutForm.get('shippingPostalCode')?.hasError('pattern') && checkoutForm.get('shippingPostalCode')?.touched) {
+                    <mat-error>Code postal invalide (5 chiffres)</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Pays</mat-label>
+                  <input matInput formControlName="shippingCountry">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Téléphone</mat-label>
+                  <input matInput formControlName="phoneNumber" placeholder="+33612345678">
+                  @if (checkoutForm.get('phoneNumber')?.hasError('pattern') && checkoutForm.get('phoneNumber')?.touched) {
+                    <mat-error>Numéro de téléphone invalide</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Mode de paiement</mat-label>
+                <mat-select formControlName="paymentMethod">
+                  @for (method of paymentMethods; track method.value) {
+                    <mat-option [value]="method.value">{{ method.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Notes (optionnel)</mat-label>
+                <textarea matInput formControlName="notes" rows="2"
+                          placeholder="Instructions spéciales pour la livraison..."></textarea>
+              </mat-form-field>
+
+              <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="goBack()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Retour au panier
+                </button>
+                <button mat-raised-button color="primary" type="submit"
+                        [disabled]="isSubmitting || checkoutForm.invalid">
+                  @if (isSubmitting) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <ng-container>
+                      <mat-icon>check_circle</mat-icon>
+                      Confirmer la commande
+                    </ng-container>
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

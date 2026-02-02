@@ -1,0 +1,51 @@
+# ====================================
+# ORDER SERVICE CONFIGURATION
+# ====================================
+
+server:
+  port: 8085  # Different port from other services (User: 8081, Product: 8082, Media: 8083, Frontend: 8084)
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${SERVER_SSL_KEY_STORE_PASSWORD:?SERVER_SSL_KEY_STORE_PASSWORD must be provided}
+    key-store-type: PKCS12
+    key-alias: ecommerce
+
+spring:
+  application:
+    name: order-service
+
+  # MONGODB CONFIGURATION
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/ecommerce_orders}
+
+  # KAFKA CONFIGURATION (Producer)
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: orderEvent:com.ecommerce.order.dto.OrderEvent
+
+# JWT CONFIGURATION (same secret as User Service for validation)
+jwt:
+  secret: ${JWT_SECRET:?JWT_SECRET must be provided}
+  expiration: 86400000  # 24 hours in milliseconds
+
+# KAFKA TOPICS
+kafka:
+  topic:
+    order-events: order-events
+
+# LOGGING
+logging:
+  level:
+    com.ecommerce.order: INFO
+    org.springframework.security: DEBUG
+    org.springframework.kafka: INFO
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8084,http://localhost:4200,https://localhost:4200}

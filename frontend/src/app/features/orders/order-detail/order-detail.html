@@ -1,0 +1,157 @@
+<div class="order-detail-container">
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (order) {
+    <!-- Header -->
+    <div class="order-header">
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1>Commande #{{ order.id.slice(0, 8) }}</h1>
+        <span class="order-date">Passée le {{ formatDate(order.createdAt) }}</span>
+      </div>
+      <mat-chip [color]="getStatusColor(order.status)" selected>
+        {{ getStatusDisplay(order.status) }}
+      </mat-chip>
+    </div>
+
+    <!-- Status Tracker -->
+    @if (order.status !== 'CANCELLED') {
+      <mat-card class="status-tracker">
+        <mat-card-content>
+          <div class="status-steps">
+            @for (step of statusSteps; track step.status; let i = $index) {
+              <div class="step" [class.completed]="isStepCompleted(i)" [class.active]="isStepActive(i)">
+                <div class="step-icon">
+                  <mat-icon>{{ step.icon }}</mat-icon>
+                </div>
+                <span class="step-label">{{ step.label }}</span>
+              </div>
+              @if (i < statusSteps.length - 1) {
+                <div class="step-connector" [class.completed]="isStepCompleted(i + 1)"></div>
+              }
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <mat-card class="cancelled-notice">
+        <mat-card-content>
+          <mat-icon color="warn">cancel</mat-icon>
+          <div>
+            <strong>Commande annulée</strong>
+            @if (order.cancellationReason) {
+              <p>{{ order.cancellationReason }}</p>
+            }
+            <span class="cancel-date">Annulée le {{ formatDate(order.cancelledAt) }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <div class="order-content">
+      <!-- Items -->
+      <mat-card class="order-items-card">
+        <mat-card-header>
+          <mat-card-title>Articles commandés</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @for (item of order.items; track item.productId) {
+            <div class="order-item">
+              @if (item.imageUrl) {
+                <img [src]="item.imageUrl" [alt]="item.productName" class="item-image">
+              } @else {
+                <div class="item-image placeholder">
+                  <mat-icon>image</mat-icon>
+                </div>
+              }
+              <div class="item-details">
+                <span class="item-name">{{ item.productName }}</span>
+                <span class="item-qty">Quantité: {{ item.quantity }}</span>
+                <span class="item-price">{{ item.price | currency:'EUR' }} / unité</span>
+              </div>
+              <span class="item-subtotal">{{ item.price * item.quantity | currency:'EUR' }}</span>
+            </div>
+          }
+          <mat-divider></mat-divider>
+          <div class="order-total">
+            <span>Total</span>
+            <span class="total-amount">{{ order.totalAmount | currency:'EUR' }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Shipping Info -->
+      <mat-card class="shipping-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>local_shipping</mat-icon>
+            Livraison
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-row">
+            <mat-icon>person</mat-icon>
+            <span>{{ order.userName }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon>home</mat-icon>
+            <span>{{ order.shippingAddress }}, {{ order.shippingPostalCode }} {{ order.shippingCity }}, {{ order.shippingCountry }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon>phone</mat-icon>
+            <span>{{ order.phoneNumber }}</span>
+          </div>
+          <div class="info-row">
+            <mat-icon>email</mat-icon>
+            <span>{{ order.userEmail }}</span>
+          </div>
+          @if (order.notes) {
+            <div class="info-row">
+              <mat-icon>note</mat-icon>
+              <span>{{ order.notes }}</span>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Payment Info -->
+      <mat-card class="payment-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>payment</mat-icon>
+            Paiement
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="payment-method">
+            @if (order.paymentMethod === 'COD') {
+              <mat-icon>local_atm</mat-icon>
+              <span>Paiement à la livraison</span>
+            } @else {
+              <mat-icon>credit_card</mat-icon>
+              <span>{{ order.paymentMethod }}</span>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Actions -->
+    <div class="order-actions">
+      @if (canCancel()) {
+        <button mat-stroked-button color="warn" (click)="cancelOrder()">
+          <mat-icon>cancel</mat-icon>
+          Annuler la commande
+        </button>
+      }
+      <button mat-raised-button color="primary" (click)="reorder()">
+        <mat-icon>replay</mat-icon>
+        Commander à nouveau
+      </button>
+    </div>
+  }
+</div>

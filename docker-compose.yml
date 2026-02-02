@@ -146,6 +146,30 @@ services:
     networks:
       - ecommerce-network
 
+  # ===== ORDER SERVICE =====
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-order-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATA_MONGODB_URI: ${ORDER_SERVICE_MONGODB_URI:?Set ORDER_SERVICE_MONGODB_URI}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      SERVER_SSL_ENABLED: "false"
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SERVER_SSL_KEY_STORE_PASSWORD:?Set SERVER_SSL_KEY_STORE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
   # ===== FRONTEND =====
   frontend:
     build:
@@ -159,6 +183,7 @@ services:
       - user-service
       - product-service
       - media-service
+      - order-service
     networks:
       - ecommerce-network
 

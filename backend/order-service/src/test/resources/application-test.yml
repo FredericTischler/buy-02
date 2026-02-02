@@ -1,0 +1,22 @@
+# Test configuration
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test_orders
+  kafka:
+    bootstrap-servers: localhost:9092
+
+jwt:
+  secret: test-secret-key-for-testing-purposes-only-32chars
+
+server:
+  ssl:
+    enabled: false
+
+app:
+  cors:
+    allowed-origins: "*"
+
+logging:
+  level:
+    com.ecommerce.order: DEBUG

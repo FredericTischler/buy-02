@@ -1,0 +1,83 @@
+<div class="my-orders-container">
+  <mat-card class="orders-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>receipt_long</mat-icon>
+        Mes commandes
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Filter -->
+      <div class="filter-section">
+        <mat-form-field appearance="outline">
+          <mat-label>Filtrer par statut</mat-label>
+          <mat-select [(value)]="selectedStatus" (selectionChange)="onStatusFilterChange()">
+            @for (option of statusOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else if (orders.length === 0) {
+        <div class="empty-state">
+          <mat-icon>shopping_bag</mat-icon>
+          <p>Aucune commande trouvée</p>
+          <button mat-raised-button color="primary" routerLink="/products">
+            Découvrir nos produits
+          </button>
+        </div>
+      } @else {
+        <div class="orders-list">
+          @for (order of orders; track order.id) {
+            <mat-card class="order-card" (click)="viewOrder(order)">
+              <div class="order-header">
+                <div class="order-info">
+                  <span class="order-id">Commande #{{ order.id.slice(0, 8) }}</span>
+                  <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+                </div>
+                <mat-chip [color]="getStatusColor(order.status)" selected>
+                  {{ getStatusDisplay(order.status) }}
+                </mat-chip>
+              </div>
+
+              <div class="order-items">
+                @for (item of order.items.slice(0, 3); track item.productId) {
+                  <span class="item-preview">{{ item.productName }} (x{{ item.quantity }})</span>
+                }
+                @if (order.items.length > 3) {
+                  <span class="more-items">+{{ order.items.length - 3 }} autres</span>
+                }
+              </div>
+
+              <div class="order-footer">
+                <span class="order-total">{{ order.totalAmount | currency:'EUR' }}</span>
+                <div class="order-actions" (click)="$event.stopPropagation()">
+                  @if (canCancel(order)) {
+                    <button mat-icon-button color="warn" matTooltip="Annuler"
+                            (click)="cancelOrder(order)">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  }
+                  <button mat-icon-button color="primary" matTooltip="Recommander"
+                          (click)="reorder(order)">
+                    <mat-icon>replay</mat-icon>
+                  </button>
+                  <button mat-icon-button matTooltip="Voir détails"
+                          (click)="viewOrder(order)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

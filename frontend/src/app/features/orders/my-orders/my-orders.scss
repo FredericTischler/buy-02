@@ -1,0 +1,133 @@
+.my-orders-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.orders-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+}
+
+.filter-section {
+  margin-bottom: 16px;
+
+  mat-form-field {
+    width: 250px;
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin-bottom: 16px;
+  }
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+  padding: 16px;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+
+    .order-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .order-id {
+        font-weight: 600;
+        color: #333;
+      }
+
+      .order-date {
+        font-size: 0.85em;
+        color: #666;
+      }
+    }
+  }
+
+  .order-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    .item-preview {
+      background: #f5f5f5;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
+    .more-items {
+      color: #1976d2;
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+  }
+
+  .order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 12px;
+
+    .order-total {
+      font-size: 1.2em;
+      font-weight: 600;
+      color: #1976d2;
+    }
+
+    .order-actions {
+      display: flex;
+      gap: 4px;
+    }
+  }
+}

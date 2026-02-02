@@ -8,10 +8,16 @@
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  min-height: 64px;
 
   .title {
     font-size: 20px;
     font-weight: 600;
+    white-space: nowrap;
   }
 
   .spacer {
@@ -20,11 +26,56 @@
 
   .search-field {
     width: 300px;
-    margin: 0 20px;
-    
-    ::ng-deep .mat-mdc-text-field-wrapper {
-      background-color: white;
+    margin: 0;
+
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper {
+        background-color: white;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 40px;
+      }
+
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
+      .mat-mdc-form-field-flex {
+        height: 100%;
+        align-items: center;
+      }
+
+      .mat-mdc-form-field-infix {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        min-height: auto;
+        display: flex;
+        align-items: center;
+      }
+
+      .mat-mdc-floating-label {
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        left: 28px !important;
+      }
+
+      .mdc-floating-label--float-above {
+        transform: translateY(-106%) scale(0.75) !important;
+        left: 0 !important;
+      }
+
+      input {
+        height: 40px;
+      }
     }
+  }
+
+  .cart-button {
+    margin-left: 8px;
+  }
+
+  button[mat-raised-button] {
+    margin-left: 8px;
   }
 }
 
@@ -74,6 +125,7 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 
   &:hover {
     transform: translateY(-4px);
@@ -84,7 +136,6 @@
     width: 100%;
     height: 250px;
     object-fit: cover;
-    border-radius: 4px 4px 0 0;
   }
 
   .no-image {
@@ -108,7 +159,7 @@
   mat-card-header {
     background-color: #f8f9fa;
     padding: 16px;
-    margin: -16px -16px 16px -16px;
+    margin: 0;
   }
 
   mat-card-title {
@@ -169,7 +220,7 @@
     display: flex;
     gap: 8px;
     padding: 16px;
-    margin: auto -16px -16px -16px;
+    margin: auto 0 0 0;
     border-top: 1px solid #eee;
 
     button {

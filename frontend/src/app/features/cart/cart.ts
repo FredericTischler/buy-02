@@ -99,10 +99,11 @@ export class CartPage implements OnInit {
   }
 
   checkout(): void {
-    // TODO: Implémenter le système de commande
-    this.snackBar.open('Fonction de commande à venir!', 'OK', {
-      duration: 3000
-    });
+    if (this.cartItems.length === 0) {
+      this.snackBar.open('Votre panier est vide', 'Fermer', { duration: 3000 });
+      return;
+    }
+    this.router.navigate(['/checkout']);
   }
 
   goBack(): void {

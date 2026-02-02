@@ -72,6 +72,12 @@ echo -e "${CYAN}  - Media Service (port 8083)...${NC}"
 cd backend/media-service
 java -jar target/media-service-1.0.0.jar > /dev/null 2>&1 &
 cd ../..
+sleep 3
+
+echo -e "${CYAN}  - Order Service (port 8085)...${NC}"
+cd backend/order-service
+java -jar target/order-service-1.0.0.jar > /dev/null 2>&1 &
+cd ../..
 sleep 5
 
 echo -e "${GREEN}  ✓ Services backend demarres${NC}"
@@ -92,6 +98,7 @@ echo -e "  - Frontend:        https://localhost:4200"
 echo -e "  - User Service:    https://localhost:8081"
 echo -e "  - Product Service: https://localhost:8082"
 echo -e "  - Media Service:   https://localhost:8083"
+echo -e "  - Order Service:   https://localhost:8085"
 echo -e "  - MongoDB:         localhost:27017"
 echo -e "  - Kafka:           localhost:9092"
 echo ""
