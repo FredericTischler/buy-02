@@ -27,6 +27,54 @@
   </mat-toolbar>
 
   <div class="content">
+    <!-- Stats Cards -->
+    <div class="stats-section">
+      @if (statsLoading) {
+        <div class="stats-loading">
+          <mat-spinner diameter="30"></mat-spinner>
+        </div>
+      } @else if (stats) {
+        <div class="stats-grid">
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <mat-icon class="stat-icon orders">receipt_long</mat-icon>
+              <div class="stat-info">
+                <span class="stat-value">{{ stats.totalOrders }}</span>
+                <span class="stat-label">Commandes</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <mat-icon class="stat-icon completed">check_circle</mat-icon>
+              <div class="stat-info">
+                <span class="stat-value">{{ stats.completedOrders }}</span>
+                <span class="stat-label">Livrées</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <mat-icon class="stat-icon items">inventory_2</mat-icon>
+              <div class="stat-info">
+                <span class="stat-value">{{ stats.totalItemsSold }}</span>
+                <span class="stat-label">Articles vendus</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          <mat-card class="stat-card highlight">
+            <mat-card-content>
+              <mat-icon class="stat-icon revenue">euro</mat-icon>
+              <div class="stat-info">
+                <span class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</span>
+                <span class="stat-label">Chiffre d'affaires</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      }
+    </div>
+
     <!-- Header avec bouton ajouter -->
     <div class="header">
       <h1>Mes Produits</h1>
