@@ -1,0 +1,107 @@
+# ===================================
+# SONARQUBE - CODE QUALITY ANALYSIS
+# Docker Compose Configuration
+# ===================================
+#
+# Ce fichier ajoute SonarQube à l'infrastructure e-commerce existante
+# IMPORTANT: PostgreSQL est utilisé UNIQUEMENT pour SonarQube (contrainte technique)
+#            MongoDB reste la base de données du projet e-commerce
+#
+# Usage:
+#   Démarrer: docker-compose -f docker-compose.yml -f docker-compose.sonarqube.yml up -d
+#   Arrêter:  docker-compose -f docker-compose.yml -f docker-compose.sonarqube.yml down
+#
+
+services:
+  # ===== POSTGRESQL (Pour SonarQube uniquement) =====
+  sonarqube-postgres:
+    image: postgres:16-alpine
+    container_name: ecommerce-sonarqube-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${SONAR_DB_USER:-sonar}
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-sonar123}
+      POSTGRES_DB: ${SONAR_DB_NAME:-sonarqube}
+    volumes:
+      - sonarqube_postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SONAR_DB_USER:-sonar}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== SONARQUBE =====
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: ecommerce-sonarqube
+    restart: unless-stopped
+    depends_on:
+      sonarqube-postgres:
+        condition: service_healthy
+    ports:
+      - "${SONAR_PORT:-9000}:9000"
+    environment:
+      # Configuration Base de données
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-postgres:5432/${SONAR_DB_NAME:-sonarqube}
+      SONAR_JDBC_USERNAME: ${SONAR_DB_USER:-sonar}
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:-sonar123}
+
+      # Configuration JVM pour performance
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+
+      # Configuration Web
+      SONAR_WEB_JAVAADDITIONALOPTS: "-server"
+      SONAR_CE_JAVAADDITIONALOPTS: "-server"
+    volumes:
+      # Données SonarQube (configurations, règles, projets)
+      - sonarqube_data:/opt/sonarqube/data
+
+      # Extensions et plugins
+      - sonarqube_extensions:/opt/sonarqube/extensions
+
+      # Logs SonarQube
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - ecommerce-network
+    ulimits:
+      # Limites nécessaires pour Elasticsearch (utilisé par SonarQube)
+      nofile:
+        soft: 65536
+        hard: 65536
+      nproc:
+        soft: 4096
+        hard: 4096
+    mem_limit: 2g
+    mem_reservation: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9000/api/system/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+# ===== NETWORKS =====
+networks:
+  ecommerce-network:
+    external: true
+    name: safe-zone_ecommerce-network
+
+# ===== VOLUMES =====
+volumes:
+  # PostgreSQL (uniquement pour SonarQube)
+  sonarqube_postgres_data:
+    driver: local
+
+  # Données SonarQube
+  sonarqube_data:
+    driver: local
+
+  # Extensions/Plugins SonarQube
+  sonarqube_extensions:
+    driver: local
+
+  # Logs SonarQube
+  sonarqube_logs:
+    driver: local

@@ -1,0 +1,5 @@
+{
+  "ssl": true,
+  "sslKey": "../ssl/keystore.key",
+  "sslCert": "../ssl/keystore.crt"
+}

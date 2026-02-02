@@ -1,0 +1,43 @@
+server:
+  port: 8083
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${SERVER_SSL_KEY_STORE_PASSWORD:?SERVER_SSL_KEY_STORE_PASSWORD must be provided}
+    key-store-type: PKCS12
+    key-alias: ecommerce
+
+spring:
+  application:
+    name: media-service
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/ecommerce_media}
+      database: ecommerce_media
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 2MB
+      max-request-size: 2MB
+
+jwt:
+  secret: ${JWT_SECRET:?JWT_SECRET must be provided}
+
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: media-service-group
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      spring.json.trusted.packages: "*"
+  topic:
+    product-events: product-events
+
+upload:
+  directory: ./uploads/media
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8084,http://localhost:4200,https://localhost:4200}

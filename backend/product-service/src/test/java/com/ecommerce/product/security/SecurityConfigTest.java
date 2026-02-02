@@ -1,0 +1,79 @@
+package com.ecommerce.product.security;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.HashMap;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class SecurityConfigTest {
+
+    private SecurityConfig securityConfig;
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @BeforeEach
+    void setUp() {
+        securityConfig = new SecurityConfig();
+        jwtAuthenticationFilter = new JwtAuthenticationFilter();
+        ReflectionTestUtils.setField(securityConfig, "jwtAuthenticationFilter", jwtAuthenticationFilter);
+    }
+
+    @Test
+    void securityFilterChain_shouldIncludeJwtFilter() throws Exception {
+        ReflectionTestUtils.setField(securityConfig, "allowedOriginsProperty", "*");
+
+        SecurityFilterChain chain = securityConfig.securityFilterChain(createHttpSecurity());
+
+        assertThat(chain.getFilters()).anyMatch(filter -> filter == jwtAuthenticationFilter);
+    }
+
+    @Test
+    void corsConfigurationSource_shouldParseConfiguredOrigins() {
+        ReflectionTestUtils.setField(securityConfig, "allowedOriginsProperty", "https://app.com, https://admin.com");
+
+        CorsConfiguration configuration = resolveCorsConfiguration();
+
+        assertThat(configuration.getAllowedOrigins()).containsExactly("https://app.com", "https://admin.com");
+        assertThat(configuration.getAllowedMethods()).contains("GET", "POST", "PUT", "DELETE", "OPTIONS");
+    }
+
+    @Test
+    void corsConfigurationSource_shouldFallbackToWildcardPattern() {
+        ReflectionTestUtils.setField(securityConfig, "allowedOriginsProperty", "   ");
+
+        CorsConfiguration configuration = resolveCorsConfiguration();
+
+        assertThat(configuration.getAllowedOriginPatterns()).containsExactly("*");
+        assertThat(configuration.getAllowedHeaders()).contains("Authorization", "Content-Type", "Accept");
+    }
+
+    private HttpSecurity createHttpSecurity() throws Exception {
+        ObjectPostProcessor<Object> objectPostProcessor = new ObjectPostProcessor<>() {
+            @Override
+            public <O> O postProcess(O object) {
+                return object;
+            }
+        };
+        AuthenticationManagerBuilder authBuilder = new AuthenticationManagerBuilder(objectPostProcessor);
+        HashMap<Class<?>, Object> sharedObjects = new HashMap<>();
+        ApplicationContext context = new StaticApplicationContext();
+        sharedObjects.put(ApplicationContext.class, context);
+        return new HttpSecurity(objectPostProcessor, authBuilder, sharedObjects);
+    }
+
+    private CorsConfiguration resolveCorsConfiguration() {
+        CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+        return source.getCorsConfiguration(new MockHttpServletRequest());
+    }
+}

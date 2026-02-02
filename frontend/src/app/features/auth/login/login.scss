@@ -1,0 +1,87 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+mat-card-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+mat-card-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #111827;
+}
+
+mat-card-subtitle {
+  font-size: 14px;
+  color: #4b5563;
+  margin-top: 5px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.submit-button {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  
+  mat-spinner {
+    display: inline-block;
+    margin-right: 10px;
+  }
+}
+
+.error-message {
+  display: block;
+  color: #991b1b;
+  font-size: 14px;
+  margin-bottom: 15px;
+  text-align: center;
+  padding: 10px;
+  background-color: #fee2e2;
+  border-radius: 4px;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 15px;
+  
+  span {
+    color: #1f2933;
+    margin-right: 5px;
+  }
+
+  a {
+    color: #1d4ed8;
+    font-weight: 600;
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .login-card {
+    padding: 15px;
+  }
+  
+  mat-card-title {
+    font-size: 24px;
+  }
+}

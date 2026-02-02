@@ -1,0 +1,147 @@
+<div class="detail-container">
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Chargement du produit...</p>
+    </div>
+  } @else if (errorMessage) {
+    <div class="error-container">
+      <mat-icon>error_outline</mat-icon>
+      <h2>{{ errorMessage }}</h2>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Retour à la liste
+      </button>
+    </div>
+  } @else if (product) {
+    <!-- Back Button -->
+    <div class="back-button">
+      <button mat-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Retour à la liste
+      </button>
+    </div>
+
+    <!-- Product Content -->
+    <div class="product-content">
+      <!-- Image Gallery -->
+      <div class="gallery-section">
+        @if (images.length > 0) {
+          <div class="main-image">
+            <img [src]="images[selectedImageIndex]" [alt]="product.name">
+            
+            @if (images.length > 1) {
+              <button 
+                mat-icon-button 
+                class="nav-btn prev-btn" 
+                (click)="previousImage()"
+                [disabled]="selectedImageIndex === 0">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <button 
+                mat-icon-button 
+                class="nav-btn next-btn" 
+                (click)="nextImage()"
+                [disabled]="selectedImageIndex === images.length - 1">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            }
+          </div>
+
+          @if (images.length > 1) {
+            <div class="thumbnail-container">
+              @for (image of images; track image; let i = $index) {
+                <button 
+                  type="button"
+                  class="thumbnail" 
+                  aria-label="Voir l'image {{ i + 1 }} de {{ product.name }}"
+                  (click)="selectImage(i)">
+                  <img [src]="image" [alt]="product.name + ' - vue ' + (i + 1)">
+                </button>
+              }
+            </div>
+          }
+        } @else {
+          <div class="no-image-placeholder">
+            <mat-icon>image</mat-icon>
+            <p>Aucune image disponible</p>
+          </div>
+        }
+      </div>
+
+      <!-- Product Info -->
+      <div class="info-section">
+        <mat-card>
+          <mat-card-content>
+            <!-- Title and Category -->
+            <div class="header">
+              <h1>{{ product.name }}</h1>
+              <mat-chip-set>
+                <mat-chip>{{ product.category }}</mat-chip>
+              </mat-chip-set>
+            </div>
+
+            <!-- Price -->
+            <div class="price-section">
+              <span class="price">{{ product.price | number:'1.2-2' }} €</span>
+            </div>
+
+            <!-- Stock Status -->
+            <div class="stock-section">
+              <span class="stock-badge" [ngClass]="stockStatusClass">
+                <mat-icon>{{ product.stock > 0 ? 'check_circle' : 'cancel' }}</mat-icon>
+                {{ stockStatus }}
+              </span>
+              <span class="stock-count">{{ product.stock }} disponible(s)</span>
+            </div>
+
+            <!-- Description -->
+            <div class="description">
+              <h3>Description</h3>
+              <p>{{ product.description }}</p>
+            </div>
+
+            <!-- Seller Info -->
+            <div class="seller-info">
+              <mat-icon>store</mat-icon>
+              <span>Vendu par : <strong>{{ product.sellerName }}</strong></span>
+            </div>
+
+            <!-- Quantity Selector -->
+            <fieldset class="quantity-section">
+              <legend class="quantity-label">Quantité</legend>
+              <div class="quantity-controls">
+                <button 
+                  mat-icon-button 
+                  (click)="decreaseQuantity()"
+                  [disabled]="quantity <= 1">
+                  <mat-icon>remove</mat-icon>
+                </button>
+                <span class="quantity-value">{{ quantity }}</span>
+                <button 
+                  mat-icon-button 
+                  (click)="increaseQuantity()"
+                  [disabled]="quantity >= product.stock">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
+            </fieldset>
+
+            <!-- Add to Cart Button -->
+            <div class="actions">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                class="add-to-cart-btn"
+                (click)="addToCart()"
+                [disabled]="product.stock === 0">
+                <mat-icon>shopping_cart</mat-icon>
+                {{ product.stock > 0 ? 'Ajouter au panier' : 'Rupture de stock' }}
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  }
+</div>

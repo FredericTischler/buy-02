@@ -1,0 +1,117 @@
+<div class="dashboard-container">
+  <!-- Toolbar -->
+  <mat-toolbar color="primary" class="toolbar">
+    <span class="title">📊 Tableau de bord Vendeur</span>
+    <span class="spacer"></span>
+    @if (currentUser && currentUser.avatar) {
+      <img [src]="getAvatarUrl(currentUser.avatar)" alt="Avatar" class="avatar">
+    }
+    @if (currentUser && !currentUser.avatar) {
+      <mat-icon class="avatar-icon">account_circle</mat-icon>
+    }
+    <button mat-button (click)="viewProducts()">
+      <mat-icon>storefront</mat-icon>
+      Voir la boutique
+    </button>
+    <button mat-raised-button color="warn" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Déconnexion
+    </button>
+  </mat-toolbar>
+
+  <div class="content">
+    <!-- Header avec bouton ajouter -->
+    <div class="header">
+      <h1>Mes Produits</h1>
+      <button mat-raised-button color="accent" (click)="addProduct()">
+        <mat-icon>add</mat-icon>
+        Ajouter un produit
+      </button>
+    </div>
+
+    <!-- Chargement -->
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Chargement de vos produits...</p>
+      </div>
+    }
+
+    <!-- Erreur -->
+    @if (errorMessage) {
+      <div class="error-container">
+        <mat-icon>error</mat-icon>
+        <p>{{ errorMessage }}</p>
+      </div>
+    }
+
+    <!-- Table des produits -->
+    @if (!loading && !errorMessage) {
+      @if (products.length === 0) {
+        <mat-card class="empty-card">
+          <mat-card-content>
+            <mat-icon>inventory_2</mat-icon>
+            <h2>Aucun produit</h2>
+            <p>Commencez par ajouter votre premier produit !</p>
+            <button mat-raised-button color="primary" (click)="addProduct()">
+              <mat-icon>add</mat-icon>
+              Créer mon premier produit
+            </button>
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <div class="table-container">
+          <table mat-table [dataSource]="products" class="products-table">
+            <!-- Nom -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Nom</th>
+              <td mat-cell *matCellDef="let product">
+                <strong>{{ product.name }}</strong>
+              </td>
+            </ng-container>
+
+            <!-- Catégorie -->
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef>Catégorie</th>
+              <td mat-cell *matCellDef="let product">{{ product.category }}</td>
+            </ng-container>
+
+            <!-- Prix -->
+            <ng-container matColumnDef="price">
+              <th mat-header-cell *matHeaderCellDef>Prix</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="price">{{ product.price | currency:'EUR' }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Stock -->
+            <ng-container matColumnDef="stock">
+              <th mat-header-cell *matHeaderCellDef>Stock</th>
+              <td mat-cell *matCellDef="let product">
+                <span class="stock" [class.low-stock]="product.stock < 10">
+                  {{ product.stock }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Actions -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let product">
+                <button mat-icon-button color="primary" (click)="editProduct(product)" matTooltip="Modifier">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteProduct(product)" matTooltip="Supprimer">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,98 @@
+<div class="product-list-container">
+  <!-- Header avec recherche et déconnexion -->
+  <mat-toolbar color="primary" class="toolbar">
+    <span class="title">🛒 Boutique E-Commerce</span>
+    
+    <span class="spacer"></span>
+    
+    <!-- Barre de recherche -->
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Rechercher un produit</mat-label>
+      <input matInput [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()" placeholder="Ex: Ordinateur">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+
+    <!-- Bouton Panier avec badge -->
+    <button mat-icon-button class="cart-button" (click)="goToCart()">
+      <mat-icon [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">shopping_cart</mat-icon>
+    </button>
+    
+    <!-- Bouton déconnexion -->
+    <button mat-raised-button color="warn" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Déconnexion
+    </button>
+  </mat-toolbar>
+
+  <!-- Contenu principal -->
+  <div class="content">
+    <!-- Message de chargement -->
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Chargement des produits...</p>
+      </div>
+    }
+
+    <!-- Message d'erreur -->
+    @if (errorMessage) {
+      <div class="error-container">
+        <mat-icon>error</mat-icon>
+        <p>{{ errorMessage }}</p>
+      </div>
+    }
+
+    <!-- Liste des produits -->
+    @if (!loading && !errorMessage) {
+      @if (products.length === 0) {
+        <div class="empty-container">
+          <mat-icon>inventory_2</mat-icon>
+          <p>Aucun produit disponible pour le moment</p>
+        </div>
+      } @else {
+        <div class="products-grid">
+          @for (product of products; track product.id) {
+            <mat-card class="product-card">
+              <!-- Image du produit -->
+              @if (product.imageUrl) {
+                <img mat-card-image [src]="product.imageUrl" [alt]="product.name" class="product-image">
+              } @else {
+                <div class="no-image">
+                  <mat-icon>image</mat-icon>
+                  <span>Pas d'image</span>
+                </div>
+              }
+              
+              <mat-card-header>
+                <mat-card-title>{{ product.name }}</mat-card-title>
+                <mat-card-subtitle>{{ product.category }}</mat-card-subtitle>
+              </mat-card-header>
+              
+              <mat-card-content>
+                <p class="description">{{ product.description }}</p>
+                <div class="product-info">
+                  <span class="price">{{ product.price | currency:'EUR' }}</span>
+                  <span class="stock" [class.low-stock]="product.stock < 10">
+                    Stock: {{ product.stock }}
+                  </span>
+                </div>
+                <p class="seller">Vendeur: {{ product.sellerName }}</p>
+              </mat-card-content>
+              
+              <mat-card-actions>
+                <button mat-raised-button color="primary" (click)="addToCart(product)">
+                  <mat-icon>shopping_cart</mat-icon>
+                  Ajouter au panier
+                </button>
+                <button mat-button color="accent" (click)="viewDetails(product.id)">
+                  <mat-icon>info</mat-icon>
+                  Détails
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

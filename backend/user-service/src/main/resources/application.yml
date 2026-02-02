@@ -1,0 +1,63 @@
+# ===================================
+# USER SERVICE CONFIGURATION
+# ===================================
+
+# SERVER
+server:
+  port: 8081
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ${SERVER_SSL_KEY_STORE_PASSWORD:?SERVER_SSL_KEY_STORE_PASSWORD must be provided}
+    key-store-type: PKCS12
+    key-alias: ecommerce
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+
+# SPRING
+spring:
+  application:
+    name: user-service
+  
+  # MONGODB CONNECTION
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/ecommerce_users}
+
+  # KAFKA
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  
+  # FILE UPLOAD (for avatar)
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+# JWT CONFIGURATION
+jwt:
+  secret: ${JWT_SECRET:?JWT_SECRET must be provided}
+  expiration: 86400000  # 24 heures en millisecondes
+
+# LOGGING
+logging:
+  level:
+    root: INFO
+    com.ecommerce.user: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# UPLOAD DIRECTORY
+upload:
+  avatar-dir: ./uploads/avatars
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8084,http://localhost:4200,https://localhost:4200}

@@ -1,0 +1,177 @@
+# ===================================
+# E-COMMERCE MICROSERVICES
+# Docker Compose Configuration
+# ===================================
+
+services:
+  # ===== MONGODB =====
+  mongodb:
+    image: mongo:7.0
+    container_name: ecommerce-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_ROOT_USERNAME:?Set MONGODB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD:?Set MONGODB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ecommerce
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== ZOOKEEPER (Required for Kafka) =====
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: ecommerce-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== KAFKA =====
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: ecommerce-kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ===== USER SERVICE =====
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-user-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATA_MONGODB_URI: ${USER_SERVICE_MONGODB_URI:?Set USER_SERVICE_MONGODB_URI}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      SERVER_SSL_ENABLED: "false"
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SERVER_SSL_KEY_STORE_PASSWORD:?Set SERVER_SSL_KEY_STORE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # ===== PRODUCT SERVICE =====
+  product-service:
+    build:
+      context: ./backend/product-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-product-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATA_MONGODB_URI: ${PRODUCT_SERVICE_MONGODB_URI:?Set PRODUCT_SERVICE_MONGODB_URI}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      SERVER_SSL_ENABLED: "false"
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SERVER_SSL_KEY_STORE_PASSWORD:?Set SERVER_SSL_KEY_STORE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # ===== MEDIA SERVICE =====
+  media-service:
+    build:
+      context: ./backend/media-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-media-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATA_MONGODB_URI: ${MEDIA_SERVICE_MONGODB_URI:?Set MEDIA_SERVICE_MONGODB_URI}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9093
+      UPLOAD_DIRECTORY: /app/uploads
+      SERVER_SSL_ENABLED: "false"
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SERVER_SSL_KEY_STORE_PASSWORD:?Set SERVER_SSL_KEY_STORE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      CORS_ALLOWED_ORIGINS: "*"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    volumes:
+      - media_uploads:/app/uploads
+    networks:
+      - ecommerce-network
+
+  # ===== FRONTEND =====
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ecommerce-frontend
+    restart: unless-stopped
+    ports:
+      - "8084:80"
+    depends_on:
+      - user-service
+      - product-service
+      - media-service
+    networks:
+      - ecommerce-network
+
+# ===== NETWORKS =====
+networks:
+  ecommerce-network:
+    driver: bridge
+
+# ===== VOLUMES =====
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  media_uploads:
+    driver: local
