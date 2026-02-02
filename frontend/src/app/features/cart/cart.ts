@@ -109,4 +109,8 @@ export class CartPage implements OnInit {
   goBack(): void {
     this.router.navigate(['/products']);
   }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
+  }
 }
