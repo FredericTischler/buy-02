@@ -224,6 +224,8 @@ describe('ProductDetail', () => {
       quantity: 2,
       imageUrl: 'http://cdn/image.png',
       stock: 10,
+      sellerId: 'seller1',
+      sellerName: 'Test Seller',
     });
     expect(component.quantity).toBe(1);
   });
@@ -245,6 +247,8 @@ describe('ProductDetail', () => {
       price: 99.99,
       quantity: 8,
       imageUrl: null,
+      sellerId: 'seller1',
+      sellerName: 'Test Seller',
     };
     cartService.getCartItems.and.returnValue([existingItem]);
 
@@ -267,6 +271,8 @@ describe('ProductDetail', () => {
       price: 99.99,
       quantity: 10,
       imageUrl: null,
+      sellerId: 'seller1',
+      sellerName: 'Test Seller',
     };
     cartService.getCartItems.and.returnValue([existingItem]);
 

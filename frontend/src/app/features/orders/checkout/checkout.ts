@@ -102,8 +102,8 @@ export class Checkout implements OnInit {
     const orderItems: OrderItemRequest[] = this.cartItems.map(item => ({
       productId: item.productId,
       productName: item.name,
-      sellerId: '', // Will be filled from product data
-      sellerName: '',
+      sellerId: item.sellerId,
+      sellerName: item.sellerName,
       price: item.price,
       quantity: item.quantity,
       imageUrl: item.imageUrl || undefined

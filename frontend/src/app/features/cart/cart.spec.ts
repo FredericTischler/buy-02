@@ -56,7 +56,7 @@ describe('CartPage', () => {
 
   it('should load cart items when loading cart', () => {
     const items: CartItem[] = [
-      { productId: '1', name: 'Product 1', price: 10, quantity: 2, imageUrl: null },
+      { productId: '1', name: 'Product 1', price: 10, quantity: 2, imageUrl: null, sellerId: 'seller-1', sellerName: 'Test Seller' },
     ];
     (cartService.getCartItems as jasmine.Spy).and.returnValue(items);
 
@@ -68,7 +68,7 @@ describe('CartPage', () => {
 
   it('should update cart items from subscription', () => {
     const items: CartItem[] = [
-      { productId: '1', name: 'Product 1', price: 10, quantity: 2, imageUrl: null },
+      { productId: '1', name: 'Product 1', price: 10, quantity: 2, imageUrl: null, sellerId: 'seller-1', sellerName: 'Test Seller' },
     ];
 
     cartStream.next(items);
@@ -84,6 +84,8 @@ describe('CartPage', () => {
       quantity: 2,
       stock: 5,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     component.increaseQuantity(item);
@@ -100,6 +102,8 @@ describe('CartPage', () => {
       quantity: 5,
       stock: 5,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     component.increaseQuantity(item);
@@ -119,6 +123,8 @@ describe('CartPage', () => {
       price: 10,
       quantity: 100,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     component.increaseQuantity(item);
@@ -133,6 +139,8 @@ describe('CartPage', () => {
       price: 10,
       quantity: 3,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     component.decreaseQuantity(item);
@@ -147,6 +155,8 @@ describe('CartPage', () => {
       price: 10,
       quantity: 1,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     component.decreaseQuantity(item);
@@ -161,6 +171,8 @@ describe('CartPage', () => {
       price: 10,
       quantity: 2,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     component.removeItem(item);
@@ -210,6 +222,8 @@ describe('CartPage', () => {
       price: 25,
       quantity: 3,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
 
     const itemTotal = component.getItemTotal(item);
@@ -229,13 +243,26 @@ describe('CartPage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/products']);
   });
 
-  it('should show message when checking out', () => {
+  it('should show message when checking out with empty cart', () => {
+    component.cartItems = [];
+
     component.checkout();
 
     expect(snackBar.open).toHaveBeenCalledWith(
-      'Fonction de commande à venir!',
-      'OK',
+      'Votre panier est vide',
+      'Fermer',
       jasmine.objectContaining({ duration: 3000 })
     );
+    expect(router.navigate).not.toHaveBeenCalledWith(['/checkout']);
+  });
+
+  it('should navigate to checkout when cart has items', () => {
+    component.cartItems = [
+      { productId: '1', name: 'Product 1', price: 10, quantity: 2, imageUrl: null, sellerId: 'seller-1', sellerName: 'Test Seller' },
+    ];
+
+    component.checkout();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/checkout']);
   });
 });

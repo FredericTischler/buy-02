@@ -10,6 +10,8 @@ describe('Cart service', () => {
     price: 100,
     quantity: 1,
     imageUrl: '/img.png',
+    sellerId: 'seller-1',
+    sellerName: 'Test Seller',
   };
 
   beforeEach(() => {

@@ -144,7 +144,9 @@ export class ProductDetail implements OnInit {
       price: product.price,
       quantity: this.quantity,
       imageUrl: this.images[0] || null,
-      stock: product.stock
+      stock: product.stock,
+      sellerId: product.sellerId,
+      sellerName: product.sellerName
     });
 
     // Notification

@@ -192,7 +192,9 @@ export class ProductList implements OnInit {
       price: product.price,
       quantity: 1,
       imageUrl: product.imageUrl || null,
-      stock: product.stock // Ajouter le stock pour vérification ultérieure
+      stock: product.stock,
+      sellerId: product.sellerId,
+      sellerName: product.sellerName
     });
 
     this.snackBar.open(`${product.name} ajouté au panier`, 'Voir le panier', {

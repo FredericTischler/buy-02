@@ -133,7 +133,7 @@ describe('ProductList', () => {
   });
 
   it('should prevent adding out-of-stock items', () => {
-    component.addToCart({ id: '1', name: 'Phone', stock: 0 });
+    component.addToCart({ id: '1', name: 'Phone', stock: 0, sellerId: 'seller-1', sellerName: 'Test Seller' });
     expect((cartService.addToCart as jasmine.Spy).calls.count()).toBe(0);
   });
 
@@ -144,15 +144,17 @@ describe('ProductList', () => {
       name: 'Phone',
       price: 100,
       imageUrl: null,
+      sellerId: 'seller-1',
+      sellerName: 'Test Seller',
     };
     const getCartItemsSpy = spyOn(cartService, 'getCartItems').and.returnValue([cartItem]);
-    component.addToCart({ id: '1', name: 'Phone', stock: 2 });
+    component.addToCart({ id: '1', name: 'Phone', stock: 2, sellerId: 'seller-1', sellerName: 'Test Seller' });
     expect(getCartItemsSpy).toHaveBeenCalled();
     expect((cartService.addToCart as jasmine.Spy).calls.count()).toBe(0);
   });
 
   it('should add to cart and offer navigation', () => {
-    component.addToCart({ id: '1', name: 'Phone', stock: 5, price: 100 });
+    component.addToCart({ id: '1', name: 'Phone', stock: 5, price: 100, sellerId: 'seller-1', sellerName: 'Test Seller' });
     expect((cartService.addToCart as jasmine.Spy).calls.any()).toBeTrue();
   });
 
@@ -259,7 +261,7 @@ describe('ProductList', () => {
     };
     snackBar.open.and.returnValue(snackBarRef as any);
 
-    component.addToCart({ id: '1', name: 'Phone', stock: 5, price: 100, imageUrl: null });
+    component.addToCart({ id: '1', name: 'Phone', stock: 5, price: 100, imageUrl: null, sellerId: 'seller-1', sellerName: 'Test Seller' });
 
     expect((cartService.addToCart as jasmine.Spy)).toHaveBeenCalled();
   });
@@ -267,7 +269,7 @@ describe('ProductList', () => {
   it('should update cart count from cart items subscription', () => {
     spyOn(cartService, 'getCartCount').and.returnValue(3);
 
-    cartStream.next([{ productId: '1', quantity: 1, name: 'Test', price: 100, imageUrl: null }]);
+    cartStream.next([{ productId: '1', quantity: 1, name: 'Test', price: 100, imageUrl: null, sellerId: 'seller-1', sellerName: 'Test Seller' }]);
 
     expect(component.cartCount).toBe(3);
   });
