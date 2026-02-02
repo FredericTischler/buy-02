@@ -156,6 +156,10 @@ export class UserProfile implements OnInit {
     this.router.navigate(['/seller/dashboard']);
   }
 
+  goToSellerOrders(): void {
+    this.router.navigate(['/seller/orders']);
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);

@@ -5,6 +5,7 @@ import { ProductList } from './features/products/product-list/product-list';
 import { ProductDetail } from './features/products/product-detail/product-detail';
 import { CartPage } from './features/cart/cart';
 import { Dashboard } from './features/seller/dashboard/dashboard';
+import { SellerOrders } from './features/seller/seller-orders/seller-orders';
 import { Checkout } from './features/orders/checkout/checkout';
 import { MyOrders } from './features/orders/my-orders/my-orders';
 import { OrderDetail } from './features/orders/order-detail/order-detail';
@@ -58,6 +59,11 @@ export const routes: Routes = [
   {
     path: 'seller/dashboard',
     component: Dashboard,
+    canActivate: [sellerGuard] // Protégé : nécessite d'être SELLER
+  },
+  {
+    path: 'seller/orders',
+    component: SellerOrders,
     canActivate: [sellerGuard] // Protégé : nécessite d'être SELLER
   },
   {

@@ -9,9 +9,16 @@
     @if (currentUser && !currentUser.avatar) {
       <mat-icon class="avatar-icon">account_circle</mat-icon>
     }
+    <button mat-button (click)="viewOrders()">
+      <mat-icon>receipt_long</mat-icon>
+      Mes commandes
+    </button>
     <button mat-button (click)="viewProducts()">
       <mat-icon>storefront</mat-icon>
       Voir la boutique
+    </button>
+    <button mat-icon-button (click)="goToProfile()" matTooltip="Mon Profil">
+      <mat-icon>account_circle</mat-icon>
     </button>
     <button mat-raised-button color="warn" (click)="logout()">
       <mat-icon>logout</mat-icon>

@@ -1,0 +1,166 @@
+<mat-toolbar color="primary" class="seller-toolbar">
+  <button mat-icon-button (click)="goToDashboard()" matTooltip="Retour au tableau de bord">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">Commandes Vendeur</span>
+  <span class="toolbar-spacer"></span>
+  <button mat-icon-button (click)="goToProducts()" matTooltip="Voir le catalogue">
+    <mat-icon>storefront</mat-icon>
+  </button>
+  <button mat-raised-button color="warn" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Déconnexion
+  </button>
+</mat-toolbar>
+
+<div class="seller-orders-container">
+  <!-- Stats Section -->
+  <mat-card class="stats-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>analytics</mat-icon>
+        Statistiques de ventes
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (statsLoading) {
+        <div class="stats-loading">
+          <mat-spinner diameter="30"></mat-spinner>
+        </div>
+      } @else if (stats) {
+        <div class="stats-grid">
+          <div class="stat-item">
+            <mat-icon class="stat-icon orders-icon">receipt_long</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ stats.totalOrders }}</span>
+              <span class="stat-label">Commandes totales</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <mat-icon class="stat-icon completed-icon">check_circle</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ stats.completedOrders }}</span>
+              <span class="stat-label">Commandes livrées</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <mat-icon class="stat-icon items-icon">inventory_2</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ stats.totalItemsSold }}</span>
+              <span class="stat-label">Articles vendus</span>
+            </div>
+          </div>
+          <div class="stat-item highlight">
+            <mat-icon class="stat-icon money-icon">euro</mat-icon>
+            <div class="stat-content">
+              <span class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</span>
+              <span class="stat-label">Chiffre d'affaires</span>
+            </div>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Orders Section -->
+  <mat-card class="orders-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>local_shipping</mat-icon>
+        Commandes contenant mes produits
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Filter -->
+      <div class="filter-section">
+        <mat-form-field appearance="outline">
+          <mat-label>Filtrer par statut</mat-label>
+          <mat-select [(value)]="selectedStatus" (selectionChange)="onStatusFilterChange()">
+            @for (option of statusOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      @if (isLoading) {
+        <div class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+      } @else if (orders.length === 0) {
+        <div class="empty-state">
+          <mat-icon>inbox</mat-icon>
+          <p>Aucune commande trouvée</p>
+          <span class="empty-hint">Les commandes contenant vos produits apparaitront ici</span>
+        </div>
+      } @else {
+        <div class="orders-list">
+          @for (order of orders; track order.id) {
+            <mat-card class="order-card">
+              <div class="order-header">
+                <div class="order-info">
+                  <span class="order-id">Commande #{{ order.id.slice(0, 8) }}</span>
+                  <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+                </div>
+                <mat-chip [color]="getStatusColor(order.status)" selected>
+                  <mat-icon class="chip-icon">{{ getStatusIcon(order.status) }}</mat-icon>
+                  {{ getStatusDisplay(order.status) }}
+                </mat-chip>
+              </div>
+
+              <!-- Customer Info -->
+              <div class="customer-info">
+                <mat-icon>person</mat-icon>
+                <div class="customer-details">
+                  <span class="customer-name">{{ order.userName }}</span>
+                  <span class="customer-email">{{ order.userEmail }}</span>
+                </div>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <!-- My Items in this order -->
+              <div class="my-items">
+                <span class="items-title">Mes produits dans cette commande:</span>
+                @for (item of getMyItemsFromOrder(order); track item.productName) {
+                  <div class="item-row">
+                    <span class="item-name">{{ item.productName }}</span>
+                    <span class="item-qty">x{{ item.quantity }}</span>
+                    <span class="item-price">{{ formatCurrency(item.price * item.quantity) }}</span>
+                  </div>
+                }
+              </div>
+
+              <div class="order-footer">
+                <div class="order-totals">
+                  <span class="my-total">Mon total: {{ formatCurrency(getMyItemsTotal(order)) }}</span>
+                  <span class="order-total-hint">Total commande: {{ formatCurrency(order.totalAmount) }}</span>
+                </div>
+                <div class="order-actions">
+                  @if (canUpdateStatus(order)) {
+                    <button mat-raised-button color="primary" [matMenuTriggerFor]="statusMenu">
+                      <mat-icon>update</mat-icon>
+                      Modifier statut
+                    </button>
+                    <mat-menu #statusMenu="matMenu">
+                      @for (status of getAvailableTransitions(order); track status) {
+                        <button mat-menu-item (click)="updateStatus(order, status)">
+                          <mat-icon>{{ getStatusIcon(status) }}</mat-icon>
+                          <span>{{ getStatusDisplay(status) }}</span>
+                        </button>
+                      }
+                    </mat-menu>
+                  }
+                  <button mat-icon-button matTooltip="Voir détails" (click)="viewOrder(order)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

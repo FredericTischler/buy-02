@@ -11,8 +11,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatBadgeModule } from '@angular/material/badge';
 
 import { OrderService } from '../../../core/services/order';
+import { Auth } from '../../../core/services/auth';
+import { Cart } from '../../../core/services/cart';
 import { Order, OrderStatus } from '../../../core/models/order.model';
 
 @Component({
@@ -29,7 +33,9 @@ import { Order, OrderStatus } from '../../../core/models/order.model';
     MatFormFieldModule,
     MatSnackBarModule,
     MatTableModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatToolbarModule,
+    MatBadgeModule
   ],
   templateUrl: './my-orders.html',
   styleUrl: './my-orders.scss'
@@ -38,6 +44,7 @@ export class MyOrders implements OnInit {
   orders: Order[] = [];
   isLoading = true;
   selectedStatus: OrderStatus | null = null;
+  cartCount = 0;
 
   displayedColumns = ['id', 'date', 'items', 'total', 'status', 'actions'];
 
@@ -52,12 +59,39 @@ export class MyOrders implements OnInit {
 
   constructor(
     private readonly orderService: OrderService,
+    private readonly authService: Auth,
+    private readonly cartService: Cart,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.loadOrders();
+    this.updateCartCount();
+    this.cartService.cartItems$.subscribe(() => {
+      this.updateCartCount();
+    });
+  }
+
+  updateCartCount(): void {
+    this.cartCount = this.cartService.getCartCount();
+  }
+
+  goToProducts(): void {
+    this.router.navigate(['/products']);
+  }
+
+  goToCart(): void {
+    this.router.navigate(['/cart']);
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   loadOrders(): void {

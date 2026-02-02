@@ -1,3 +1,18 @@
+.orders-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .toolbar-title {
+    margin-left: 8px;
+    font-weight: 500;
+  }
+
+  .toolbar-spacer {
+    flex: 1 1 auto;
+  }
+}
+
 .my-orders-container {
   padding: 24px;
   max-width: 900px;

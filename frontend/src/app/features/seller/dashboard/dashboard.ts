@@ -9,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Product } from '../../../core/services/product';
 import { Auth } from '../../../core/services/auth';
 import { Product as ProductModel } from '../../../core/models/product.model';
@@ -26,7 +27,8 @@ import { resolveApiBase } from '../../../core/utils/api-host';
     MatTableModule,
     MatProgressSpinnerModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatTooltipModule
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -137,6 +139,14 @@ export class Dashboard implements OnInit {
 
   viewProducts(): void {
     this.router.navigate(['/products']);
+  }
+
+  viewOrders(): void {
+    this.router.navigate(['/seller/orders']);
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 
   logout(): void {
