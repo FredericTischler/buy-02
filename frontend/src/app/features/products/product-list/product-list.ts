@@ -12,6 +12,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { Product } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
@@ -33,7 +37,11 @@ import { catchError, map } from 'rxjs/operators';
     MatInputModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSelectModule,
+    MatSliderModule,
+    MatChipsModule,
+    MatExpansionModule
   ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
@@ -44,6 +52,12 @@ export class ProductList implements OnInit {
   errorMessage = '';
   searchKeyword = '';
   cartCount = 0;
+
+  // Filtres
+  selectedCategory = '';
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  showFilters = false;
 
   constructor(
     private readonly productService: Product,
@@ -215,5 +229,52 @@ export class ProductList implements OnInit {
 
   goToProfile(): void {
     this.router.navigate(['/profile']);
+  }
+
+  // Filtres
+  get categories(): string[] {
+    const cats = this.products.map(p => p.category).filter(c => c);
+    return [...new Set(cats)].sort();
+  }
+
+  get filteredProducts(): any[] {
+    return this.products.filter(product => {
+      // Filtre par catégorie
+      if (this.selectedCategory && product.category !== this.selectedCategory) {
+        return false;
+      }
+      // Filtre par prix minimum
+      if (this.minPrice !== null && product.price < this.minPrice) {
+        return false;
+      }
+      // Filtre par prix maximum
+      if (this.maxPrice !== null && product.price > this.maxPrice) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  get priceRange(): { min: number; max: number } {
+    if (this.products.length === 0) return { min: 0, max: 1000 };
+    const prices = this.products.map(p => p.price);
+    return {
+      min: Math.floor(Math.min(...prices)),
+      max: Math.ceil(Math.max(...prices))
+    };
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  clearFilters(): void {
+    this.selectedCategory = '';
+    this.minPrice = null;
+    this.maxPrice = null;
+  }
+
+  hasActiveFilters(): boolean {
+    return this.selectedCategory !== '' || this.minPrice !== null || this.maxPrice !== null;
   }
 }

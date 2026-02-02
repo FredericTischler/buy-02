@@ -55,8 +55,68 @@
           <p>Aucun produit disponible pour le moment</p>
         </div>
       } @else {
-        <div class="products-grid">
-          @for (product of products; track product.id) {
+        <!-- Filtres -->
+        <div class="filters-section">
+          <div class="filters-header">
+            <button mat-stroked-button (click)="toggleFilters()">
+              <mat-icon>filter_list</mat-icon>
+              Filtres
+              @if (hasActiveFilters()) {
+                <span class="filter-badge">actifs</span>
+              }
+            </button>
+            @if (hasActiveFilters()) {
+              <button mat-button color="warn" (click)="clearFilters()">
+                <mat-icon>clear</mat-icon>
+                Effacer
+              </button>
+            }
+            <span class="products-count">{{ filteredProducts.length }} produit(s)</span>
+          </div>
+
+          @if (showFilters) {
+            <mat-card class="filters-card">
+              <mat-card-content>
+                <div class="filters-grid">
+                  <!-- Filtre catégorie -->
+                  <mat-form-field appearance="outline">
+                    <mat-label>Catégorie</mat-label>
+                    <mat-select [(ngModel)]="selectedCategory">
+                      <mat-option value="">Toutes les catégories</mat-option>
+                      @for (category of categories; track category) {
+                        <mat-option [value]="category">{{ category }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <!-- Filtre prix min -->
+                  <mat-form-field appearance="outline">
+                    <mat-label>Prix minimum (€)</mat-label>
+                    <input matInput type="number" [(ngModel)]="minPrice" [min]="0" placeholder="0">
+                  </mat-form-field>
+
+                  <!-- Filtre prix max -->
+                  <mat-form-field appearance="outline">
+                    <mat-label>Prix maximum (€)</mat-label>
+                    <input matInput type="number" [(ngModel)]="maxPrice" [min]="0" placeholder="1000">
+                  </mat-form-field>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+
+        @if (filteredProducts.length === 0) {
+          <div class="empty-container">
+            <mat-icon>search_off</mat-icon>
+            <p>Aucun produit ne correspond aux filtres</p>
+            <button mat-raised-button color="primary" (click)="clearFilters()">
+              Effacer les filtres
+            </button>
+          </div>
+        } @else {
+          <div class="products-grid">
+            @for (product of filteredProducts; track product.id) {
             <mat-card class="product-card">
               <!-- Image du produit -->
               @if (product.imageUrl) {
@@ -96,7 +156,8 @@
               </mat-card-actions>
             </mat-card>
           }
-        </div>
+          </div>
+        }
       }
     }
   </div>

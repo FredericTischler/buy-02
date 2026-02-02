@@ -114,6 +114,52 @@
   }
 }
 
+// Filtres
+.filters-section {
+  margin-bottom: 20px;
+}
+
+.filters-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  .filter-badge {
+    background: #667eea;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+
+  .products-count {
+    margin-left: auto;
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+.filters-card {
+  margin-bottom: 16px;
+
+  mat-card-content {
+    padding: 16px !important;
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  align-items: start;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
