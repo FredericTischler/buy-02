@@ -614,6 +614,26 @@ public class OrderService {
         return new SellerProductStats(bestSelling, recentSales, totalUniqueProductsSold, totalCustomers);
     }
 
+    /**
+     * Delete an order (only cancelled orders can be deleted by the user)
+     */
+    @Transactional
+    public void deleteOrder(String orderId, String userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("You are not authorized to delete this order");
+        }
+
+        if (order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.DELIVERED) {
+            throw new RuntimeException("Order cannot be deleted. Only cancelled or delivered orders can be deleted.");
+        }
+
+        orderRepository.delete(order);
+        log.info("Order {} deleted by user {}", orderId, userId);
+    }
+
     // Stats DTOs
     public record UserOrderStats(long totalOrders, long completedOrders, double totalSpent) {}
     public record SellerOrderStats(long totalOrders, long completedOrders, double totalRevenue, long totalItemsSold) {}

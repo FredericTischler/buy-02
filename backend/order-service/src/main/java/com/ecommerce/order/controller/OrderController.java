@@ -398,6 +398,38 @@ public class OrderController {
     }
 
     /**
+     * Delete order (only for cancelled orders or by admin)
+     * DELETE /api/orders/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteOrder(
+            @PathVariable String id,
+            HttpServletRequest httpRequest) {
+        try {
+            String userId = (String) httpRequest.getAttribute("userId");
+
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not authenticated"));
+            }
+
+            orderService.deleteOrder(id, userId);
+            return ResponseEntity.ok(Map.of("message", "Order deleted successfully"));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not authorized")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", e.getMessage()));
+            }
+            if (e.getMessage().contains("cannot be deleted")) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * Health check endpoint
      * GET /api/orders/health
      */

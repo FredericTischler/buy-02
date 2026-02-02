@@ -7,6 +7,10 @@ import com.ecommerce.product.model.Product;
 import com.ecommerce.product.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -182,6 +186,73 @@ public class ProductService {
         kafkaTemplate.send(productEventsTopic, event);
     }
     
+    /**
+     * RÉCUPÉRER TOUS LES PRODUITS AVEC PAGINATION
+     */
+    public Page<ProductResponse> getAllProductsPaginated(int page, int size, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return productRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    /**
+     * RECHERCHE AVANCÉE AVEC FILTRES ET PAGINATION
+     */
+    public Page<ProductResponse> searchProductsAdvanced(
+            String keyword,
+            String category,
+            Double minPrice,
+            Double maxPrice,
+            Integer minStock,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Valeurs par défaut pour les filtres
+        Double effectiveMinPrice = minPrice != null ? minPrice : 0.0;
+        Double effectiveMaxPrice = maxPrice != null ? maxPrice : Double.MAX_VALUE;
+        Integer effectiveMinStock = minStock != null ? minStock : 0;
+        String effectiveKeyword = keyword != null && !keyword.isEmpty() ? keyword : ".*";
+
+        if (category != null && !category.isEmpty()) {
+            return productRepository.findByCategoryWithFilters(
+                category, effectiveMinPrice, effectiveMaxPrice, effectiveMinStock, pageable
+            ).map(this::toResponse);
+        } else {
+            return productRepository.searchWithFilters(
+                effectiveKeyword, effectiveMinPrice, effectiveMaxPrice, effectiveMinStock, pageable
+            ).map(this::toResponse);
+        }
+    }
+
+    /**
+     * FILTRER PAR DISPONIBILITÉ (stock > 0)
+     */
+    public List<ProductResponse> getAvailableProducts() {
+        return productRepository.findByStockGreaterThan(0)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * FILTRER PAR FOURCHETTE DE PRIX
+     */
+    public List<ProductResponse> getProductsByPriceRange(Double minPrice, Double maxPrice) {
+        return productRepository.findByPriceBetween(minPrice, maxPrice)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     /**
      * CONVERTIR PRODUCT EN PRODUCTRESPONSE
      */

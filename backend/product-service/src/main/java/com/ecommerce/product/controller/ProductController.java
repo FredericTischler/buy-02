@@ -6,6 +6,7 @@ import com.ecommerce.product.service.ProductService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -68,6 +69,49 @@ public class ProductController {
     @GetMapping("/search")
     public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String keyword) {
         List<ProductResponse> products = productService.searchProducts(keyword);
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * GET PRODUCTS WITH PAGINATION (PUBLIC)
+     */
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<ProductResponse>> getProductsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Page<ProductResponse> products = productService.getAllProductsPaginated(page, size, sortBy, sortDir);
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * ADVANCED SEARCH WITH FILTERS (PUBLIC)
+     * Supports: keyword, category, price range, stock availability, pagination
+     */
+    @GetMapping("/filter")
+    public ResponseEntity<Page<ProductResponse>> filterProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Integer minStock,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        Page<ProductResponse> products = productService.searchProductsAdvanced(
+            keyword, category, minPrice, maxPrice, minStock, page, size, sortBy, sortDir
+        );
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * GET AVAILABLE PRODUCTS (stock > 0) (PUBLIC)
+     */
+    @GetMapping("/available")
+    public ResponseEntity<List<ProductResponse>> getAvailableProducts() {
+        List<ProductResponse> products = productService.getAvailableProducts();
         return ResponseEntity.ok(products);
     }
     

@@ -74,22 +74,46 @@ public class SecurityConfig {
     
     /**
      * SECURITY FILTER CHAIN
-     * 
+     *
      * Configure les règles de sécurité :
      * - Routes publiques (register, login)
      * - Routes protégées (nécessitent JWT)
      * - Désactive CSRF (pas nécessaire avec JWT)
      * - Session STATELESS (pas de session serveur avec JWT)
+     * - Headers de sécurité (XSS, Clickjacking, Content-Type)
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             // CSRF : Désactivé (JWT ne nécessite pas CSRF protection)
             .csrf(csrf -> csrf.disable())
-            
+
             // CORS : Activé pour Angular
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            
+
+            // SECURITY HEADERS
+            .headers(headers -> headers
+                // Protection contre le clickjacking
+                .frameOptions(frame -> frame.deny())
+                // Protection XSS
+                .xssProtection(xss -> xss.disable()) // Modern browsers have built-in XSS protection
+                // Prevent MIME type sniffing
+                .contentTypeOptions(contentType -> {})
+                // Content Security Policy
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; " +
+                    "script-src 'self'; " +
+                    "style-src 'self' 'unsafe-inline'; " +
+                    "img-src 'self' data: https:; " +
+                    "font-src 'self'; " +
+                    "connect-src 'self' https://localhost:* http://localhost:*"
+                ))
+                // Referrer Policy
+                .referrerPolicy(referrer -> referrer.policy(
+                    org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN
+                ))
+            )
+
             // AUTORISATION DES ROUTES
             .authorizeHttpRequests(auth -> auth
                 // ROUTES PUBLIQUES (accessibles sans token)
@@ -100,21 +124,21 @@ public class SecurityConfig {
                     "/uploads/avatars/**",     // Avatars statiques
                     "/error"                   // Page d'erreur
                 ).permitAll()
-                
+
                 // TOUTES LES AUTRES ROUTES : Authentification requise
                 .anyRequest().authenticated()
             )
-            
+
             // SESSION MANAGEMENT : STATELESS
             // Pas de session stockée côté serveur (JWT = stateless)
-            .sessionManagement(session -> 
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            
+
             // AJOUTER LE FILTRE JWT
             // Le filtre s'exécute AVANT UsernamePasswordAuthenticationFilter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
     

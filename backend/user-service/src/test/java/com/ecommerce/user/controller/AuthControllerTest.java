@@ -60,7 +60,8 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturnMessage() throws Exception {
-        RegisterRequest request = new RegisterRequest("Alice", "alice@mail.com", "password123", Role.CLIENT);
+        // Password must match complexity: uppercase, lowercase, digit, special char
+        RegisterRequest request = new RegisterRequest("Alice", "alice@mail.com", "Password123!", Role.CLIENT);
         Mockito.when(userService.register(any(RegisterRequest.class))).thenReturn("OK");
 
         mockMvc.perform(post("/api/auth/register")
@@ -72,7 +73,8 @@ class AuthControllerTest {
 
     @Test
     void register_shouldHandleBusinessError() throws Exception {
-        RegisterRequest request = new RegisterRequest("Alice", "alice@mail.com", "password123", Role.CLIENT);
+        // Password must match complexity: uppercase, lowercase, digit, special char
+        RegisterRequest request = new RegisterRequest("Alice", "alice@mail.com", "Password123!", Role.CLIENT);
         Mockito.when(userService.register(any(RegisterRequest.class))).thenThrow(new RuntimeException("exists"));
 
         mockMvc.perform(post("/api/auth/register")
