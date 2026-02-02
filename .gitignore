@@ -1,0 +1,113 @@
+# ================================
+# IDE et Editeurs
+# ================================
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.settings/
+*.launch
+.c9/
+
+# ================================
+# Java / Maven
+# ================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ================================
+# Node / npm / Angular
+# ================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.yarn/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/cache/
+.sass-cache/
+coverage/
+testem.log
+__screenshots__/
+
+# ================================
+# Logs
+# ================================
+*.log
+logs/
+*.log.*
+
+# ================================
+# Fichiers d'environnement et secrets
+# ================================
+.env
+.env.local
+.env.*.local
+*.env
+application-local.properties
+application-local.yml
+application-secrets.properties
+application-secrets.yml
+secrets/
+*.pem
+*.key
+*.crt
+
+# ================================
+# Docker
+# ================================
+.docker/
+
+# ================================
+# OS Files
+# ================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ================================
+# Build & Test
+# ================================
+build/
+out/
+bin/
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# ================================
+# SonarQube
+# ================================
+.scannerwork/
+.sonar/
+
+# ================================
+# Autres
+# ================================
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.temp
