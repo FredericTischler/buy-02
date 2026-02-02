@@ -2,6 +2,7 @@ package com.ecommerce.order.controller;
 
 import com.ecommerce.order.dto.OrderRequest;
 import com.ecommerce.order.dto.OrderResponse;
+import com.ecommerce.order.dto.OrderSearchParams;
 import com.ecommerce.order.dto.SellerProductStats;
 import com.ecommerce.order.dto.StatusUpdateRequest;
 import com.ecommerce.order.dto.UserProductStats;
@@ -115,6 +116,35 @@ public class OrderController {
     }
 
     /**
+     * Search and sort orders for the authenticated user
+     * GET /api/orders/my-orders/search
+     */
+    @GetMapping("/my-orders/search")
+    public ResponseEntity<?> searchMyOrders(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
+            HttpServletRequest httpRequest) {
+        try {
+            String userId = (String) httpRequest.getAttribute("userId");
+
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not authenticated"));
+            }
+
+            OrderSearchParams params = new OrderSearchParams(keyword, status, sortBy, sortDir);
+            List<OrderResponse> orders = orderService.searchOrdersByUser(userId, params);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("Error searching user orders: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
      * Get orders for seller (orders containing their products)
      * GET /api/orders/seller
      */
@@ -140,6 +170,36 @@ public class OrderController {
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
             log.error("Error fetching seller orders: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Search and sort orders for seller
+     * GET /api/orders/seller/search
+     */
+    @GetMapping("/seller/search")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<?> searchSellerOrders(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDir,
+            HttpServletRequest httpRequest) {
+        try {
+            String sellerId = (String) httpRequest.getAttribute("userId");
+
+            if (sellerId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not authenticated"));
+            }
+
+            OrderSearchParams params = new OrderSearchParams(keyword, status, sortBy, sortDir);
+            List<OrderResponse> orders = orderService.searchOrdersForSeller(sellerId, params);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("Error searching seller orders: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         }

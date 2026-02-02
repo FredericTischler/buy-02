@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -109,6 +110,30 @@ public class OrderService {
     }
 
     /**
+     * Search and sort orders for a user with parameters
+     */
+    public List<OrderResponse> searchOrdersByUser(String userId, OrderSearchParams params) {
+        List<Order> orders;
+
+        // Get orders based on search criteria
+        if (params.hasKeyword() && params.hasStatus()) {
+            orders = orderRepository.searchByUserIdAndKeywordAndStatus(userId, params.getKeyword(), params.getStatus());
+        } else if (params.hasKeyword()) {
+            orders = orderRepository.searchByUserIdAndKeyword(userId, params.getKeyword());
+        } else if (params.hasStatus()) {
+            orders = orderRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, params.getStatus());
+        } else {
+            orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        }
+
+        // Sort the orders
+        return sortOrders(orders, params)
+                .stream()
+                .map(OrderResponse::fromOrder)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Get orders for a seller (orders containing their products)
      */
     public List<OrderResponse> getOrdersForSeller(String sellerId) {
@@ -124,6 +149,31 @@ public class OrderService {
      */
     public List<OrderResponse> getOrdersForSellerByStatus(String sellerId, OrderStatus status) {
         return orderRepository.findBySellerIdAndStatus(sellerId, status)
+                .stream()
+                .map(order -> filterOrderItemsForSeller(order, sellerId))
+                .map(OrderResponse::fromOrder)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Search and sort orders for a seller with parameters
+     */
+    public List<OrderResponse> searchOrdersForSeller(String sellerId, OrderSearchParams params) {
+        List<Order> orders;
+
+        // Get orders based on search criteria
+        if (params.hasKeyword() && params.hasStatus()) {
+            orders = orderRepository.searchBySellerIdAndKeywordAndStatus(sellerId, params.getKeyword(), params.getStatus());
+        } else if (params.hasKeyword()) {
+            orders = orderRepository.searchBySellerIdAndKeyword(sellerId, params.getKeyword());
+        } else if (params.hasStatus()) {
+            orders = orderRepository.findBySellerIdAndStatus(sellerId, params.getStatus());
+        } else {
+            orders = orderRepository.findBySellerId(sellerId);
+        }
+
+        // Sort and filter for seller
+        return sortOrders(orders, params)
                 .stream()
                 .map(order -> filterOrderItemsForSeller(order, sellerId))
                 .map(OrderResponse::fromOrder)
@@ -360,6 +410,25 @@ public class OrderService {
         if (!valid) {
             throw new RuntimeException("Invalid status transition from " + current + " to " + next);
         }
+    }
+
+    /**
+     * Sort orders based on search parameters
+     */
+    private List<Order> sortOrders(List<Order> orders, OrderSearchParams params) {
+        Comparator<Order> comparator = switch (params.getSortBy()) {
+            case "totalAmount" -> Comparator.comparing(Order::getTotalAmount);
+            case "status" -> Comparator.comparing(o -> o.getStatus().name());
+            default -> Comparator.comparing(Order::getCreatedAt);
+        };
+
+        if (!params.isAscending()) {
+            comparator = comparator.reversed();
+        }
+
+        return orders.stream()
+                .sorted(comparator)
+                .collect(Collectors.toList());
     }
 
     private void publishOrderEvent(Order order, OrderEvent.EventType eventType) {

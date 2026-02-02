@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,21 +9,24 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { OrderService } from '../../../core/services/order';
 import { Auth } from '../../../core/services/auth';
-import { Order, OrderStatus, SellerOrderStats } from '../../../core/models/order.model';
+import { Order, OrderStatus, SellerOrderStats, OrderSearchParams } from '../../../core/models/order.model';
 
 @Component({
   selector: 'app-seller-orders',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -30,6 +34,7 @@ import { Order, OrderStatus, SellerOrderStats } from '../../../core/models/order
     MatProgressSpinnerModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatInputModule,
     MatSnackBarModule,
     MatTooltipModule,
     MatToolbarModule,
@@ -46,6 +51,12 @@ export class SellerOrders implements OnInit {
   selectedStatus: OrderStatus | null = null;
   stats: SellerOrderStats | null = null;
 
+  // Search and sort
+  searchKeyword = '';
+  sortBy: 'createdAt' | 'totalAmount' | 'status' = 'createdAt';
+  sortDir: 'asc' | 'desc' = 'desc';
+  private searchSubject = new Subject<string>();
+
   statusOptions = [
     { value: null, label: 'Toutes les commandes' },
     { value: OrderStatus.PENDING, label: 'En attente' },
@@ -54,6 +65,12 @@ export class SellerOrders implements OnInit {
     { value: OrderStatus.SHIPPED, label: 'Expédiées' },
     { value: OrderStatus.DELIVERED, label: 'Livrées' },
     { value: OrderStatus.CANCELLED, label: 'Annulées' }
+  ];
+
+  sortOptions = [
+    { value: 'createdAt', label: 'Date' },
+    { value: 'totalAmount', label: 'Montant' },
+    { value: 'status', label: 'Statut' }
   ];
 
   // Available status transitions for seller
@@ -77,13 +94,26 @@ export class SellerOrders implements OnInit {
   ngOnInit(): void {
     this.loadOrders();
     this.loadStats();
+
+    // Set up search debounce
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.loadOrders();
+    });
   }
 
   loadOrders(): void {
     this.isLoading = true;
-    const status = this.selectedStatus || undefined;
+    const params: OrderSearchParams = {
+      keyword: this.searchKeyword || undefined,
+      status: this.selectedStatus || undefined,
+      sortBy: this.sortBy,
+      sortDir: this.sortDir
+    };
 
-    this.orderService.getSellerOrders(status).subscribe({
+    this.orderService.searchSellerOrders(params).subscribe({
       next: (orders) => {
         this.orders = orders;
         this.isLoading = false;
@@ -94,6 +124,24 @@ export class SellerOrders implements OnInit {
         this.snackBar.open(message, 'Erreur', { duration: 5000 });
       }
     });
+  }
+
+  onSearchChange(): void {
+    this.searchSubject.next(this.searchKeyword);
+  }
+
+  onSortChange(): void {
+    this.loadOrders();
+  }
+
+  toggleSortDir(): void {
+    this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    this.loadOrders();
+  }
+
+  clearSearch(): void {
+    this.searchKeyword = '';
+    this.loadOrders();
   }
 
   loadStats(): void {

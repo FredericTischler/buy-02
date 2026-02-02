@@ -9,7 +9,8 @@ import {
   UserOrderStats,
   SellerOrderStats,
   UserProductStats,
-  SellerProductStats
+  SellerProductStats,
+  OrderSearchParams
 } from '../models/order.model';
 import { resolveApiBase } from '../utils/api-host';
 
@@ -47,6 +48,14 @@ export class OrderService {
   }
 
   /**
+   * Search and sort orders for the authenticated user
+   */
+  searchMyOrders(params: OrderSearchParams): Observable<Order[]> {
+    const queryParams = this.buildSearchParams(params);
+    return this.http.get<Order[]>(`${this.API_URL}/my-orders/search${queryParams}`);
+  }
+
+  /**
    * Get orders for seller (orders containing their products)
    */
   getSellerOrders(status?: OrderStatus): Observable<Order[]> {
@@ -54,6 +63,34 @@ export class OrderService {
       ? `${this.API_URL}/seller?status=${status}`
       : `${this.API_URL}/seller`;
     return this.http.get<Order[]>(url);
+  }
+
+  /**
+   * Search and sort orders for seller
+   */
+  searchSellerOrders(params: OrderSearchParams): Observable<Order[]> {
+    const queryParams = this.buildSearchParams(params);
+    return this.http.get<Order[]>(`${this.API_URL}/seller/search${queryParams}`);
+  }
+
+  /**
+   * Build query string from search params
+   */
+  private buildSearchParams(params: OrderSearchParams): string {
+    const parts: string[] = [];
+    if (params.keyword) {
+      parts.push(`keyword=${encodeURIComponent(params.keyword)}`);
+    }
+    if (params.status) {
+      parts.push(`status=${params.status}`);
+    }
+    if (params.sortBy) {
+      parts.push(`sortBy=${params.sortBy}`);
+    }
+    if (params.sortDir) {
+      parts.push(`sortDir=${params.sortDir}`);
+    }
+    return parts.length > 0 ? `?${parts.join('&')}` : '';
   }
 
   /**

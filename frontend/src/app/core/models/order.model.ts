@@ -132,3 +132,11 @@ export interface SellerProductStats {
   totalUniqueProductsSold: number;
   totalCustomers: number;
 }
+
+// Search and sort parameters
+export interface OrderSearchParams {
+  keyword?: string;
+  status?: OrderStatus;
+  sortBy?: 'createdAt' | 'totalAmount' | 'status';
+  sortDir?: 'asc' | 'desc';
+}

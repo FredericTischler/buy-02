@@ -72,16 +72,44 @@
     </mat-card-header>
 
     <mat-card-content>
-      <!-- Filter -->
-      <div class="filter-section">
-        <mat-form-field appearance="outline">
-          <mat-label>Filtrer par statut</mat-label>
+      <!-- Search and Filter -->
+      <div class="search-filter-section">
+        <!-- Search bar -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Rechercher</mat-label>
+          <input matInput [(ngModel)]="searchKeyword" (ngModelChange)="onSearchChange()"
+                 placeholder="ID commande, produit, client...">
+          <mat-icon matPrefix>search</mat-icon>
+          @if (searchKeyword) {
+            <button mat-icon-button matSuffix (click)="clearSearch()">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+
+        <!-- Status filter -->
+        <mat-form-field appearance="outline" class="status-field">
+          <mat-label>Statut</mat-label>
           <mat-select [(value)]="selectedStatus" (selectionChange)="onStatusFilterChange()">
             @for (option of statusOptions; track option.value) {
               <mat-option [value]="option.value">{{ option.label }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
+
+        <!-- Sort -->
+        <mat-form-field appearance="outline" class="sort-field">
+          <mat-label>Trier par</mat-label>
+          <mat-select [(value)]="sortBy" (selectionChange)="onSortChange()">
+            @for (option of sortOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-icon-button (click)="toggleSortDir()" matTooltip="{{ sortDir === 'asc' ? 'Croissant' : 'Décroissant' }}">
+          <mat-icon>{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+        </button>
       </div>
 
       @if (isLoading) {

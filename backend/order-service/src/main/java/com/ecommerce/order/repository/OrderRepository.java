@@ -47,4 +47,20 @@ public interface OrderRepository extends MongoRepository<Order, String> {
     // Search orders by user name or email (for admin)
     @Query("{ $or: [ { 'userName': { $regex: ?0, $options: 'i' } }, { 'userEmail': { $regex: ?0, $options: 'i' } } ] }")
     List<Order> searchByUserNameOrEmail(String keyword);
+
+    // Search orders by user with keyword (searches in order ID and product names)
+    @Query("{ 'userId': ?0, $or: [ { '_id': { $regex: ?1, $options: 'i' } }, { 'items.productName': { $regex: ?1, $options: 'i' } } ] }")
+    List<Order> searchByUserIdAndKeyword(String userId, String keyword);
+
+    // Search orders by user with keyword and status
+    @Query("{ 'userId': ?0, 'status': ?2, $or: [ { '_id': { $regex: ?1, $options: 'i' } }, { 'items.productName': { $regex: ?1, $options: 'i' } } ] }")
+    List<Order> searchByUserIdAndKeywordAndStatus(String userId, String keyword, OrderStatus status);
+
+    // Search seller orders with keyword (searches in order ID, product names, customer name)
+    @Query("{ 'items.sellerId': ?0, $or: [ { '_id': { $regex: ?1, $options: 'i' } }, { 'items.productName': { $regex: ?1, $options: 'i' } }, { 'userName': { $regex: ?1, $options: 'i' } } ] }")
+    List<Order> searchBySellerIdAndKeyword(String sellerId, String keyword);
+
+    // Search seller orders with keyword and status
+    @Query("{ 'items.sellerId': ?0, 'status': ?2, $or: [ { '_id': { $regex: ?1, $options: 'i' } }, { 'items.productName': { $regex: ?1, $options: 'i' } }, { 'userName': { $regex: ?1, $options: 'i' } } ] }")
+    List<Order> searchBySellerIdAndKeywordAndStatus(String sellerId, String keyword, OrderStatus status);
 }
