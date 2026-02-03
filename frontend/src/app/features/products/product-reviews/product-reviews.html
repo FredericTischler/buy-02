@@ -1,0 +1,170 @@
+<div class="reviews-container">
+  <h2 class="section-title">Avis clients</h2>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  }
+
+  @if (!loading) {
+    <!-- Stats Summary -->
+    @if (stats && stats.totalReviews > 0) {
+      <div class="stats-summary">
+        <div class="average-rating">
+          <span class="big-rating">{{ stats.averageRating }}</span>
+          <div class="stars-display">
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <mat-icon [class]="i <= stats.averageRating ? 'star-filled' : (i - 0.5 <= stats.averageRating ? 'star-half' : 'star-empty')">
+                {{ i <= stats.averageRating ? 'star' : (i - 0.5 <= stats.averageRating ? 'star_half' : 'star_border') }}
+              </mat-icon>
+            }
+          </div>
+          <span class="total-reviews">{{ stats.totalReviews }} avis</span>
+        </div>
+
+        <div class="rating-breakdown">
+          @for (star of getStarArray(); track star) {
+            <div class="rating-row">
+              <span class="star-label">{{ star }} étoiles</span>
+              <mat-progress-bar mode="determinate" [value]="getRatingPercentage(star)"></mat-progress-bar>
+              <span class="rating-count">{{ stats.ratingDistribution[star] || 0 }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- No reviews message -->
+    @if (stats && stats.totalReviews === 0) {
+      <div class="no-reviews">
+        <mat-icon>rate_review</mat-icon>
+        <p>Aucun avis pour ce produit</p>
+        <p class="subtitle">Soyez le premier à donner votre avis !</p>
+      </div>
+    }
+
+    <mat-divider></mat-divider>
+
+    <!-- Review Form -->
+    @if (isLoggedIn()) {
+      @if (canReview || editMode) {
+        <div class="review-form">
+          <h3>{{ editMode ? 'Modifier votre avis' : 'Donnez votre avis' }}</h3>
+
+          <div class="rating-input">
+            <span class="label">Votre note :</span>
+            <div class="stars-input" (mouseleave)="clearHoverRating()">
+              @for (i of [1, 2, 3, 4, 5]; track i) {
+                <mat-icon
+                  [class]="getStarClass(i)"
+                  (click)="setRating(i)"
+                  (mouseenter)="setHoverRating(i)">
+                  {{ (hoverRating || rating) >= i ? 'star' : 'star_border' }}
+                </mat-icon>
+              }
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Titre (optionnel)</mat-label>
+            <input matInput [(ngModel)]="title" placeholder="Résumez votre avis">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Votre commentaire</mat-label>
+            <textarea matInput [(ngModel)]="comment" rows="4" placeholder="Partagez votre expérience avec ce produit"></textarea>
+          </mat-form-field>
+
+          <div class="form-actions">
+            @if (editMode) {
+              <button mat-button (click)="cancelEdit()">Annuler</button>
+            }
+            <button mat-raised-button color="primary" (click)="submitReview()" [disabled]="submitting">
+              @if (submitting) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                {{ editMode ? 'Mettre à jour' : 'Publier l\'avis' }}
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- User's existing review -->
+      @if (userReview && !editMode) {
+        <div class="user-review">
+          <h3>Votre avis</h3>
+          <mat-card>
+            <mat-card-content>
+              <div class="review-header">
+                <div class="stars-display">
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                    <mat-icon [class]="i <= userReview.rating ? 'star-filled' : 'star-empty'">
+                      {{ i <= userReview.rating ? 'star' : 'star_border' }}
+                    </mat-icon>
+                  }
+                </div>
+                <span class="review-date">{{ formatDate(userReview.createdAt) }}</span>
+              </div>
+              @if (userReview.title) {
+                <h4 class="review-title">{{ userReview.title }}</h4>
+              }
+              <p class="review-comment">{{ userReview.comment }}</p>
+              <div class="review-actions">
+                <button mat-button (click)="editReview()">
+                  <mat-icon>edit</mat-icon> Modifier
+                </button>
+                <button mat-button color="warn" (click)="deleteReview()">
+                  <mat-icon>delete</mat-icon> Supprimer
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      }
+    } @else {
+      <div class="login-prompt">
+        <p>Connectez-vous pour laisser un avis</p>
+      </div>
+    }
+
+    <mat-divider></mat-divider>
+
+    <!-- Reviews List -->
+    @if (reviews.length > 0) {
+      <div class="reviews-list">
+        <h3>Tous les avis ({{ reviews.length }})</h3>
+        @for (review of reviews; track review.id) {
+          <mat-card class="review-card">
+            <mat-card-content>
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <span class="reviewer-name">{{ review.userName }}</span>
+                  @if (review.verified) {
+                    <span class="verified-badge">
+                      <mat-icon>verified</mat-icon> Achat vérifié
+                    </span>
+                  }
+                </div>
+                <span class="review-date">{{ formatDate(review.createdAt) }}</span>
+              </div>
+              <div class="stars-display">
+                @for (i of [1, 2, 3, 4, 5]; track i) {
+                  <mat-icon [class]="i <= review.rating ? 'star-filled' : 'star-empty'">
+                    {{ i <= review.rating ? 'star' : 'star_border' }}
+                  </mat-icon>
+                }
+              </div>
+              @if (review.title) {
+                <h4 class="review-title">{{ review.title }}</h4>
+              }
+              <p class="review-comment">{{ review.comment }}</p>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

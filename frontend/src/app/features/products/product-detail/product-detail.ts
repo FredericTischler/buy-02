@@ -12,6 +12,7 @@ import { Product } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
 import { WishlistService } from '../../../core/services/wishlist';
+import { ProductReviews } from '../product-reviews/product-reviews';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -25,7 +26,8 @@ import { catchError } from 'rxjs/operators';
     MatCardModule,
     MatChipsModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ProductReviews
   ],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss'
