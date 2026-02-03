@@ -82,7 +82,7 @@
             <!-- Tri -->
             <mat-form-field appearance="outline" class="sort-field">
               <mat-label>Trier par</mat-label>
-              <mat-select [(ngModel)]="sortBy">
+              <mat-select [(ngModel)]="sortBy" (selectionChange)="onSortChange()">
                 @for (option of sortOptions; track option.value) {
                   <mat-option [value]="option.value">{{ option.label }}</mat-option>
                 }
@@ -90,7 +90,7 @@
               <mat-icon matPrefix>sort</mat-icon>
             </mat-form-field>
 
-            <span class="products-count">{{ filteredProducts.length }} produit(s)</span>
+            <span class="products-count">{{ totalElements }} produit(s)</span>
           </div>
 
           @if (showFilters) {
@@ -119,13 +119,20 @@
                     <mat-label>Prix maximum (€)</mat-label>
                     <input matInput type="number" [(ngModel)]="maxPrice" [min]="0" placeholder="1000">
                   </mat-form-field>
+                  <!-- Bouton Appliquer -->
+                  <div class="filter-actions">
+                    <button mat-raised-button color="primary" (click)="applyFilters()">
+                      <mat-icon>check</mat-icon>
+                      Appliquer
+                    </button>
+                  </div>
                 </div>
               </mat-card-content>
             </mat-card>
           }
         </div>
 
-        @if (filteredProducts.length === 0) {
+        @if (products.length === 0) {
           <div class="empty-container">
             <mat-icon>search_off</mat-icon>
             <p>Aucun produit ne correspond aux filtres</p>
@@ -135,7 +142,7 @@
           </div>
         } @else {
           <div class="products-grid">
-            @for (product of filteredProducts; track product.id) {
+            @for (product of products; track product.id) {
             <mat-card class="product-card">
               <!-- Bouton Wishlist -->
               <button
@@ -187,6 +194,18 @@
             </mat-card>
           }
           </div>
+
+          <!-- Pagination -->
+          @if (totalElements > pageSize) {
+            <mat-paginator
+              [length]="totalElements"
+              [pageSize]="pageSize"
+              [pageIndex]="pageIndex"
+              [pageSizeOptions]="pageSizeOptions"
+              (page)="onPageChange($event)"
+              showFirstLastButtons>
+            </mat-paginator>
+          }
         }
       }
     }

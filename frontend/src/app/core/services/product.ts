@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Product as ProductModel } from '../models/product.model';
+import { Product as ProductModel, Page } from '../models/product.model';
+import { HttpParams } from '@angular/common/http';
 import { resolveApiBase } from '../utils/api-host';
 
 @Injectable({
@@ -67,5 +68,30 @@ export class Product {
    */
   getMyProducts(): Observable<ProductModel[]> {
     return this.http.get<ProductModel[]>(`${this.API_URL}/seller/my-products`);
+  }
+
+  /**
+   * Recherche avancée avec filtres et pagination
+   */
+  filterProducts(params: {
+    keyword?: string;
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    page?: number;
+    size?: number;
+    sortBy?: string;
+    sortDir?: string;
+  }): Observable<Page<ProductModel>> {
+    let httpParams = new HttpParams();
+    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.minPrice != null) httpParams = httpParams.set('minPrice', params.minPrice.toString());
+    if (params.maxPrice != null) httpParams = httpParams.set('maxPrice', params.maxPrice.toString());
+    httpParams = httpParams.set('page', (params.page ?? 0).toString());
+    httpParams = httpParams.set('size', (params.size ?? 12).toString());
+    httpParams = httpParams.set('sortBy', params.sortBy ?? 'createdAt');
+    httpParams = httpParams.set('sortDir', params.sortDir ?? 'desc');
+    return this.http.get<Page<ProductModel>>(`${this.API_URL}/filter`, { params: httpParams });
   }
 }

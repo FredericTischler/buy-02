@@ -11,9 +11,22 @@ import { Product as ProductService } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
 import { Auth } from '../../../core/services/auth';
-import { Product as ProductModel } from '../../../core/models/product.model';
+import { WishlistService } from '../../../core/services/wishlist';
+import { Product as ProductModel, Page } from '../../../core/models/product.model';
 import { Media } from '../../../core/models/media.model';
 import { CartItem } from '../../../core/models/cart.model';
+
+function makePage(content: ProductModel[]): Page<ProductModel> {
+  return {
+    content,
+    totalElements: content.length,
+    totalPages: 1,
+    number: 0,
+    size: 12,
+    first: true,
+    last: true,
+  };
+}
 
 describe('ProductList', () => {
   let component: ProductList;
@@ -22,29 +35,38 @@ describe('ProductList', () => {
   let mediaService: jasmine.SpyObj<MediaService>;
   let cartService: Cart;
   let authService: jasmine.SpyObj<Auth>;
+  let wishlistService: jasmine.SpyObj<WishlistService>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
   let router: Router;
   let cartStream: BehaviorSubject<any[]>;
+  let wishlistStream: BehaviorSubject<string[]>;
 
   beforeEach(async () => {
-    productService = jasmine.createSpyObj<ProductService>('Product', ['getAllProducts', 'searchProducts']);
+    productService = jasmine.createSpyObj<ProductService>('Product', ['getAllProducts', 'searchProducts', 'filterProducts']);
     mediaService = jasmine.createSpyObj<MediaService>('MediaService', ['getMediaByProduct', 'getImageUrl']);
     authService = jasmine.createSpyObj<Auth>('Auth', ['logout']);
     snackBar = jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']);
     cartStream = new BehaviorSubject<any[]>([]);
+    wishlistStream = new BehaviorSubject<string[]>([]);
     cartService = {
       cartItems$: cartStream.asObservable(),
       getCartCount: () => 0,
       getCartItems: () => [],
       addToCart: jasmine.createSpy('addToCart'),
     } as unknown as Cart;
+    wishlistService = jasmine.createSpyObj<WishlistService>('WishlistService', ['isInWishlistSync', 'toggleWishlist', 'getWishlistCount'], {
+      wishlist$: wishlistStream.asObservable(),
+    });
 
     snackBar.open.and.returnValue({
       onAction: () => of(null),
     } as any);
     productService.getAllProducts.and.returnValue(of([]));
+    productService.filterProducts.and.returnValue(of(makePage([])));
     mediaService.getMediaByProduct.and.returnValue(of([]));
     mediaService.getImageUrl.and.callFake((url: string) => url);
+    wishlistService.isInWishlistSync.and.returnValue(false);
+    wishlistService.getWishlistCount.and.returnValue(0);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -58,6 +80,7 @@ describe('ProductList', () => {
         { provide: MediaService, useValue: mediaService },
         { provide: Cart, useValue: cartService },
         { provide: Auth, useValue: authService },
+        { provide: WishlistService, useValue: wishlistService },
         { provide: MatSnackBar, useValue: snackBar },
       ],
     }).compileComponents();
@@ -94,7 +117,7 @@ describe('ProductList', () => {
       url: '/image.png',
       uploadedAt: new Date(),
     };
-    productService.getAllProducts.and.returnValue(of([product]));
+    productService.filterProducts.and.returnValue(of(makePage([product])));
     mediaService.getMediaByProduct.and.returnValue(of([media]));
     mediaService.getImageUrl.and.returnValue('http://cdn/image.png');
 
@@ -104,32 +127,15 @@ describe('ProductList', () => {
     expect(component.loading).toBeFalse();
   });
 
-  it('should handle search with empty keyword', () => {
-    spyOn(component, 'loadProducts');
-    component.searchKeyword = '   ';
-    component.onSearch();
-    expect(component.loadProducts).toHaveBeenCalled();
-  });
-
-  it('should search products and handle errors', () => {
+  it('should reset page on search', () => {
+    component.pageIndex = 3;
     component.searchKeyword = 'phone';
-    const product: ProductModel = {
-      id: '1',
-      name: 'Phone',
-      description: 'Flagship',
-      price: 100,
-      category: 'Tech',
-      stock: 5,
-      sellerId: 'seller',
-      sellerName: 'Seller',
-    };
-    productService.searchProducts.and.returnValue(of([product]));
-    mediaService.getMediaByProduct.and.returnValue(throwError(() => new Error('media error')));
+    productService.filterProducts.and.returnValue(of(makePage([])));
 
     component.onSearch();
 
-    expect(component.products.length).toBe(1);
-    expect(component.loading).toBeFalse();
+    expect(component.pageIndex).toBe(0);
+    expect(productService.filterProducts).toHaveBeenCalled();
   });
 
   it('should prevent adding out-of-stock items', () => {
@@ -173,7 +179,7 @@ describe('ProductList', () => {
   });
 
   it('should handle error when loading products', () => {
-    productService.getAllProducts.and.returnValue(throwError(() => new Error('Product service error')));
+    productService.filterProducts.and.returnValue(throwError(() => new Error('Product service error')));
 
     component.loadProducts();
 
@@ -182,7 +188,7 @@ describe('ProductList', () => {
   });
 
   it('should handle empty product list', () => {
-    productService.getAllProducts.and.returnValue(of([]));
+    productService.filterProducts.and.returnValue(of(makePage([])));
 
     component.loadProducts();
 
@@ -190,7 +196,7 @@ describe('ProductList', () => {
     expect(component.loading).toBeFalse();
   });
 
-  it('should handle forkJoin error when loading images', () => {
+  it('should handle image loading error gracefully', () => {
     const product: ProductModel = {
       id: '1',
       name: 'Phone',
@@ -201,57 +207,13 @@ describe('ProductList', () => {
       sellerId: 'seller',
       sellerName: 'Seller',
     };
-    productService.getAllProducts.and.returnValue(of([product]));
-    mediaService.getMediaByProduct.and.returnValue(of([{
-      id: 'm1',
-      productId: '1',
-      filename: 'image.png',
-      contentType: 'image/png',
-      size: 1000,
-      uploadedBy: 'seller',
-      url: '/image.png',
-      uploadedAt: new Date(),
-    }]));
-    let forkJoinErrorCallback: any = null;
-    spyOn(component as any, 'loadProducts').and.callFake(() => {
-      component.loading = true;
-      component.errorMessage = '';
-      productService.getAllProducts().subscribe({
-        next: (products) => {
-          component.products = products;
-          component.loading = false;
-        },
-        error: (error) => {
-          component.errorMessage = 'Error';
-          component.loading = false;
-        }
-      });
-    });
+    productService.filterProducts.and.returnValue(of(makePage([product])));
+    mediaService.getMediaByProduct.and.returnValue(throwError(() => new Error('media error')));
 
     component.loadProducts();
 
-    expect(component.loading).toBeFalse();
-  });
-
-  it('should handle search error', fakeAsync(() => {
-    spyOn(console, 'error');
-    component.searchKeyword = 'phone';
-    productService.searchProducts.and.returnValue(throwError(() => new Error('Search error')));
-
-    expect(() => component.onSearch()).not.toThrow();
-    tick();
-
-    expect(component.errorMessage).toContain('Erreur lors de la recherche');
-    expect(component.loading).toBeFalse();
-  }));
-
-  it('should handle empty search results', () => {
-    component.searchKeyword = 'nonexistent';
-    productService.searchProducts.and.returnValue(of([]));
-
-    component.onSearch();
-
-    expect(component.products).toEqual([]);
+    expect(component.products.length).toBe(1);
+    expect(component.products[0].imageUrl).toBeNull();
     expect(component.loading).toBeFalse();
   });
 
@@ -272,5 +234,64 @@ describe('ProductList', () => {
     cartStream.next([{ productId: '1', quantity: 1, name: 'Test', price: 100, imageUrl: null, sellerId: 'seller-1', sellerName: 'Test Seller' }]);
 
     expect(component.cartCount).toBe(3);
+  });
+
+  it('should update page on paginator change', () => {
+    productService.filterProducts.and.returnValue(of(makePage([])));
+
+    component.onPageChange({ pageIndex: 2, pageSize: 24, length: 100 });
+
+    expect(component.pageIndex).toBe(2);
+    expect(component.pageSize).toBe(24);
+    expect(productService.filterProducts).toHaveBeenCalled();
+  });
+
+  it('should reset page when sort changes', () => {
+    component.pageIndex = 3;
+    productService.filterProducts.and.returnValue(of(makePage([])));
+
+    component.onSortChange();
+
+    expect(component.pageIndex).toBe(0);
+  });
+
+  it('should reset page and reload when filters are cleared', () => {
+    component.pageIndex = 2;
+    component.selectedCategory = 'Tech';
+    component.minPrice = 10;
+    component.maxPrice = 500;
+    component.searchKeyword = 'test';
+    productService.filterProducts.and.returnValue(of(makePage([])));
+
+    component.clearFilters();
+
+    expect(component.pageIndex).toBe(0);
+    expect(component.selectedCategory).toBe('');
+    expect(component.minPrice).toBeNull();
+    expect(component.maxPrice).toBeNull();
+    expect(component.searchKeyword).toBe('');
+  });
+
+  it('should set totalElements from page response', () => {
+    const product: ProductModel = {
+      id: '1', name: 'Phone', description: 'Flagship',
+      price: 100, category: 'Tech', stock: 5,
+      sellerId: 'seller', sellerName: 'Seller',
+    };
+    const page: Page<ProductModel> = {
+      content: [product],
+      totalElements: 42,
+      totalPages: 4,
+      number: 0,
+      size: 12,
+      first: true,
+      last: false,
+    };
+    productService.filterProducts.and.returnValue(of(page));
+    mediaService.getMediaByProduct.and.returnValue(of([]));
+
+    component.loadProducts();
+
+    expect(component.totalElements).toBe(42);
   });
 });

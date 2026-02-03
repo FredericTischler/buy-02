@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Product } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
 import { Cart } from '../../../core/services/cart';
@@ -42,13 +43,14 @@ import { catchError, map } from 'rxjs/operators';
     MatSelectModule,
     MatSliderModule,
     MatChipsModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatPaginatorModule
   ],
   templateUrl: './product-list.html',
   styleUrl: './product-list.scss',
 })
 export class ProductList implements OnInit {
-  products: any[] = []; // Produits avec leurs images
+  products: any[] = [];
   loading = false;
   errorMessage = '';
   searchKeyword = '';
@@ -57,6 +59,7 @@ export class ProductList implements OnInit {
 
   // Filtres
   selectedCategory = '';
+  availableCategories: string[] = [];
   minPrice: number | null = null;
   maxPrice: number | null = null;
   showFilters = false;
@@ -72,6 +75,12 @@ export class ProductList implements OnInit {
     { value: 'stock', label: 'Disponibilité' }
   ];
 
+  // Pagination
+  pageIndex = 0;
+  pageSize = 12;
+  totalElements = 0;
+  pageSizeOptions = [12, 24, 48];
+
   constructor(
     private readonly productService: Product,
     private readonly mediaService: MediaService,
@@ -83,6 +92,7 @@ export class ProductList implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadCategories();
     this.loadProducts();
     this.updateCartCount();
     this.updateWishlistCount();
@@ -94,14 +104,54 @@ export class ProductList implements OnInit {
     });
   }
 
+  loadCategories(): void {
+    this.productService.getAllProducts().subscribe({
+      next: (products) => {
+        const cats = products.map(p => p.category).filter(c => c);
+        this.availableCategories = [...new Set(cats)].sort();
+      }
+    });
+  }
+
+  private getSortParams(): { sortBy: string; sortDir: string } {
+    switch (this.sortBy) {
+      case 'price-asc': return { sortBy: 'price', sortDir: 'asc' };
+      case 'price-desc': return { sortBy: 'price', sortDir: 'desc' };
+      case 'name-asc': return { sortBy: 'name', sortDir: 'asc' };
+      case 'name-desc': return { sortBy: 'name', sortDir: 'desc' };
+      case 'stock': return { sortBy: 'stock', sortDir: 'desc' };
+      case 'newest':
+      default: return { sortBy: 'createdAt', sortDir: 'desc' };
+    }
+  }
+
   loadProducts(): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.productService.getAllProducts().subscribe({
-      next: (products) => {
-        // Pour chaque produit, charger ses images
-        const productsWithImages$ = products.map(product => 
+    const sort = this.getSortParams();
+
+    this.productService.filterProducts({
+      keyword: this.searchKeyword.trim() || undefined,
+      category: this.selectedCategory || undefined,
+      minPrice: this.minPrice ?? undefined,
+      maxPrice: this.maxPrice ?? undefined,
+      page: this.pageIndex,
+      size: this.pageSize,
+      sortBy: sort.sortBy,
+      sortDir: sort.sortDir
+    }).subscribe({
+      next: (page) => {
+        this.totalElements = page.totalElements;
+
+        const products = page.content;
+        if (products.length === 0) {
+          this.products = [];
+          this.loading = false;
+          return;
+        }
+
+        const productsWithImages$ = products.map(product =>
           this.mediaService.getMediaByProduct(product.id).pipe(
             map(media => ({
               ...product,
@@ -111,27 +161,18 @@ export class ProductList implements OnInit {
           )
         );
 
-        // Attendre que toutes les images soient chargées
-        if (productsWithImages$.length > 0) {
-          forkJoin(productsWithImages$).subscribe({
-            next: (productsWithImages) => {
-              this.products = productsWithImages;
-              this.loading = false;
-              console.log('Produits avec images:', productsWithImages);
-            },
-            error: (error) => {
-              console.error('Erreur chargement images:', error);
-              this.products = products;
-              this.loading = false;
-            }
-          });
-        } else {
-          this.products = [];
-          this.loading = false;
-        }
+        forkJoin(productsWithImages$).subscribe({
+          next: (productsWithImages) => {
+            this.products = productsWithImages;
+            this.loading = false;
+          },
+          error: () => {
+            this.products = products;
+            this.loading = false;
+          }
+        });
       },
-      error: (error) => {
-        console.error('Erreur de chargement des produits:', error);
+      error: () => {
         this.errorMessage = 'Impossible de charger les produits. Vérifiez que le backend est démarré.';
         this.loading = false;
       }
@@ -139,50 +180,24 @@ export class ProductList implements OnInit {
   }
 
   onSearch(): void {
-    if (!this.searchKeyword.trim()) {
-      this.loadProducts();
-      return;
-    }
+    this.pageIndex = 0;
+    this.loadProducts();
+  }
 
-    this.loading = true;
-    this.errorMessage = '';
+  onSortChange(): void {
+    this.pageIndex = 0;
+    this.loadProducts();
+  }
 
-    this.productService.searchProducts(this.searchKeyword).subscribe({
-      next: (products) => {
-        // Charger les images pour les résultats de recherche
-        const productsWithImages$ = products.map(product => 
-          this.mediaService.getMediaByProduct(product.id).pipe(
-            map(media => ({
-              ...product,
-              imageUrl: media.length > 0 ? this.mediaService.getImageUrl(media[0].url) : null
-            })),
-            catchError(() => of({ ...product, imageUrl: null }))
-          )
-        );
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadProducts();
+  }
 
-        if (productsWithImages$.length > 0) {
-          forkJoin(productsWithImages$).subscribe({
-            next: (productsWithImages) => {
-              this.products = productsWithImages;
-              this.loading = false;
-            },
-            error: (error) => {
-              console.error('Erreur chargement images:', error);
-              this.products = products;
-              this.loading = false;
-            }
-          });
-        } else {
-          this.products = [];
-          this.loading = false;
-        }
-      },
-      error: (error) => {
-        console.error('Erreur de recherche:', error);
-        this.errorMessage = 'Erreur lors de la recherche';
-        this.loading = false;
-      }
-    });
+  applyFilters(): void {
+    this.pageIndex = 0;
+    this.loadProducts();
   }
 
   logout(): void {
@@ -209,7 +224,7 @@ export class ProductList implements OnInit {
   toggleWishlist(product: any, event: Event): void {
     event.stopPropagation();
     this.wishlistService.toggleWishlist(product.id).subscribe({
-      next: (response) => {
+      next: () => {
         const action = this.isInWishlist(product.id) ? 'ajouté à' : 'retiré de';
         this.snackBar.open(`${product.name} ${action} la wishlist`, 'Fermer', {
           duration: 2000,
@@ -217,7 +232,7 @@ export class ProductList implements OnInit {
           verticalPosition: 'bottom'
         });
       },
-      error: (error) => {
+      error: () => {
         this.snackBar.open('Erreur lors de la mise à jour de la wishlist', 'Fermer', {
           duration: 3000,
           panelClass: ['error-snackbar']
@@ -239,7 +254,6 @@ export class ProductList implements OnInit {
       return;
     }
 
-    // Vérifier si le panier ne dépasse pas le stock disponible
     const currentCart = this.cartService.getCartItems();
     const existingItem = currentCart.find(item => item.productId === product.id);
     const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
@@ -283,61 +297,7 @@ export class ProductList implements OnInit {
 
   // Filtres
   get categories(): string[] {
-    const cats = this.products.map(p => p.category).filter(c => c);
-    return [...new Set(cats)].sort();
-  }
-
-  get filteredProducts(): any[] {
-    let filtered = this.products.filter(product => {
-      // Filtre par catégorie
-      if (this.selectedCategory && product.category !== this.selectedCategory) {
-        return false;
-      }
-      // Filtre par prix minimum
-      if (this.minPrice !== null && product.price < this.minPrice) {
-        return false;
-      }
-      // Filtre par prix maximum
-      if (this.maxPrice !== null && product.price > this.maxPrice) {
-        return false;
-      }
-      return true;
-    });
-
-    // Appliquer le tri
-    return this.sortProducts(filtered);
-  }
-
-  private sortProducts(products: any[]): any[] {
-    return [...products].sort((a, b) => {
-      switch (this.sortBy) {
-        case 'price-asc':
-          return a.price - b.price;
-        case 'price-desc':
-          return b.price - a.price;
-        case 'name-asc':
-          return (a.name || '').localeCompare(b.name || '');
-        case 'name-desc':
-          return (b.name || '').localeCompare(a.name || '');
-        case 'stock':
-          return b.stock - a.stock;
-        case 'newest':
-        default:
-          // Tri par date de création (plus récent d'abord)
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-      }
-    });
-  }
-
-  get priceRange(): { min: number; max: number } {
-    if (this.products.length === 0) return { min: 0, max: 1000 };
-    const prices = this.products.map(p => p.price);
-    return {
-      min: Math.floor(Math.min(...prices)),
-      max: Math.ceil(Math.max(...prices))
-    };
+    return this.availableCategories;
   }
 
   toggleFilters(): void {
@@ -348,6 +308,9 @@ export class ProductList implements OnInit {
     this.selectedCategory = '';
     this.minPrice = null;
     this.maxPrice = null;
+    this.searchKeyword = '';
+    this.pageIndex = 0;
+    this.loadProducts();
   }
 
   hasActiveFilters(): boolean {
