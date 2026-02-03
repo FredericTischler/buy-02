@@ -1,69 +1,115 @@
-<div class="login-container">
-  <mat-card class="login-card">
-    <mat-card-header>
-      <mat-card-title>Connexion</mat-card-title>
-      <mat-card-subtitle>Accédez à votre compte</mat-card-subtitle>
-    </mat-card-header>
+<div class="min-h-screen bg-gradient-to-br from-primary-600 via-accent-600 to-primary-800 flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 sm:p-10 animate-scale-in">
 
-    <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        
-        <!-- Email -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
-          <input matInput 
-                 type="email" 
-                 formControlName="email" 
-                 placeholder="exemple@email.com">
-          <mat-icon matPrefix>email</mat-icon>
-          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
-            L'email est requis
-          </mat-error>
-          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
-            Email invalide
-          </mat-error>
-        </mat-form-field>
+    <!-- Logo / Brand -->
+    <div class="flex flex-col items-center mb-8">
+      <div class="bg-primary-100 text-primary-600 rounded-full p-3 mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+        </svg>
+      </div>
+      <span class="text-2xl font-bold text-primary-700 tracking-wide">BUY-02</span>
+    </div>
 
-        <!-- Password -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Mot de passe</mat-label>
-          <input matInput 
-                 [type]="hidePassword ? 'password' : 'text'" 
-                 formControlName="password" 
-                 placeholder="Votre mot de passe">
-          <mat-icon matPrefix>lock</mat-icon>
-          <button mat-icon-button 
-                  matSuffix 
-                  type="button"
-                  (click)="hidePassword = !hidePassword">
-            <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-          </button>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-            Le mot de passe est requis
-          </mat-error>
-        </mat-form-field>
+    <!-- Title -->
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-secondary-800">Connexion</h1>
+      <p class="text-secondary-500 text-sm mt-1">Acc&eacute;dez &agrave; votre compte</p>
+    </div>
 
-        <!-- Error message -->
-        <mat-error *ngIf="errorMessage" class="error-message">
-          {{ errorMessage }}
-        </mat-error>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
 
-        <!-- Submit button -->
-        <button mat-raised-button 
-                color="primary" 
-                type="submit" 
-                class="full-width submit-button"
-                [disabled]="loginForm.invalid || loading">
-          <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
-          <span *ngIf="!loading">Se connecter</span>
-        </button>
-
-        <!-- Register link -->
-        <div class="register-link">
-          <span>Pas encore de compte ?</span>
-          <a mat-button color="accent" routerLink="/register">S'inscrire</a>
+      <!-- Email field -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-secondary-700 mb-1">Email</label>
+        <div class="relative">
+          <div class="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="exemple@email.com"
+            class="w-full px-4 py-3 pl-11 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-secondary-800 placeholder-secondary-400"
+          />
         </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')) {
+          <p class="text-error-500 text-xs mt-1">L'email est requis</p>
+        }
+        @if (loginForm.get('email')?.touched && loginForm.get('email')?.hasError('email')) {
+          <p class="text-error-500 text-xs mt-1">Email invalide</p>
+        }
+      </div>
+
+      <!-- Password field -->
+      <div>
+        <label for="password" class="block text-sm font-medium text-secondary-700 mb-1">Mot de passe</label>
+        <div class="relative">
+          <div class="absolute left-3 top-1/2 -translate-y-1/2 text-secondary-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+          </div>
+          <input
+            id="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            placeholder="Votre mot de passe"
+            class="w-full px-4 py-3 pl-11 pr-11 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-secondary-800 placeholder-secondary-400"
+          />
+          <button
+            type="button"
+            (click)="hidePassword = !hidePassword"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600 transition-colors"
+          >
+            @if (hidePassword) {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+            }
+          </button>
+        </div>
+        @if (loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')) {
+          <p class="text-error-500 text-xs mt-1">Le mot de passe est requis</p>
+        }
+      </div>
+
+      <!-- Error message -->
+      @if (errorMessage) {
+        <div class="bg-error-50 text-error-700 px-4 py-3 rounded-xl text-sm text-center">
+          {{ errorMessage }}
+        </div>
+      }
+
+      <!-- Submit button -->
+      <button
+        type="submit"
+        [disabled]="loginForm.invalid || loading"
+        class="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        @if (loading) {
+          <span class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+        } @else {
+          Se connecter
+        }
+      </button>
+
+      <!-- Register link -->
+      <div class="text-center pt-2">
+        <span class="text-sm text-secondary-500">Pas encore de compte ?</span>
+        <a routerLink="/register" class="text-sm font-semibold text-primary-600 hover:text-primary-700 ml-1 transition-colors">
+          S'inscrire
+        </a>
+      </div>
+
+    </form>
+  </div>
 </div>

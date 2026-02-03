@@ -2,24 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { OrderService } from '../../../core/services/order';
 import { Auth } from '../../../core/services/auth';
 import { Order, OrderStatus, SellerOrderStats, OrderSearchParams } from '../../../core/models/order.model';
+import { PageHeader } from '../../../shared/page-header/page-header';
 
 @Component({
   selector: 'app-seller-orders',
@@ -27,19 +16,8 @@ import { Order, OrderStatus, SellerOrderStats, OrderSearchParams } from '../../.
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatSnackBarModule,
-    MatTooltipModule,
-    MatToolbarModule,
-    MatMenuModule,
-    MatDividerModule
+    PageHeader
   ],
   templateUrl: './seller-orders.html',
   styleUrl: './seller-orders.scss'
@@ -51,11 +29,13 @@ export class SellerOrders implements OnInit {
   selectedStatus: OrderStatus | null = null;
   stats: SellerOrderStats | null = null;
 
-  // Search and sort
   searchKeyword = '';
   sortBy: 'createdAt' | 'totalAmount' | 'status' = 'createdAt';
   sortDir: 'asc' | 'desc' = 'desc';
   private searchSubject = new Subject<string>();
+
+  // Track open dropdown
+  openDropdownId: string | null = null;
 
   statusOptions = [
     { value: null, label: 'Toutes les commandes' },
@@ -73,7 +53,6 @@ export class SellerOrders implements OnInit {
     { value: 'status', label: 'Statut' }
   ];
 
-  // Available status transitions for seller
   statusTransitions: Record<OrderStatus, OrderStatus[]> = {
     [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
     [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
@@ -95,7 +74,6 @@ export class SellerOrders implements OnInit {
     this.loadOrders();
     this.loadStats();
 
-    // Set up search debounce
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged()
@@ -165,7 +143,12 @@ export class SellerOrders implements OnInit {
     this.router.navigate(['/orders', order.id]);
   }
 
+  toggleDropdown(orderId: string): void {
+    this.openDropdownId = this.openDropdownId === orderId ? null : orderId;
+  }
+
   updateStatus(order: Order, newStatus: OrderStatus): void {
+    this.openDropdownId = null;
     const statusDisplay = this.getStatusDisplay(newStatus);
 
     this.orderService.updateOrderStatus(order.id, { status: newStatus }).subscribe({
@@ -193,21 +176,17 @@ export class SellerOrders implements OnInit {
     return this.orderService.getStatusDisplay(status);
   }
 
-  getStatusColor(status: OrderStatus): string {
-    return this.orderService.getStatusColor(status);
-  }
-
-  getStatusIcon(status: OrderStatus): string {
-    const iconMap: Record<OrderStatus, string> = {
-      [OrderStatus.PENDING]: 'hourglass_empty',
-      [OrderStatus.CONFIRMED]: 'check_circle',
-      [OrderStatus.PROCESSING]: 'inventory',
-      [OrderStatus.SHIPPED]: 'local_shipping',
-      [OrderStatus.DELIVERED]: 'done_all',
-      [OrderStatus.CANCELLED]: 'cancel',
-      [OrderStatus.REFUNDED]: 'currency_exchange'
+  getStatusBadgeClass(status: OrderStatus): string {
+    const classMap: Record<string, string> = {
+      'PENDING': 'bg-warning-50 text-warning-700',
+      'CONFIRMED': 'bg-primary-50 text-primary-700',
+      'PROCESSING': 'bg-accent-50 text-accent-700',
+      'SHIPPED': 'bg-primary-50 text-primary-700',
+      'DELIVERED': 'bg-success-50 text-success-700',
+      'CANCELLED': 'bg-error-50 text-error-700',
+      'REFUNDED': 'bg-secondary-100 text-secondary-700'
     };
-    return iconMap[status] || 'help';
+    return classMap[status] || 'bg-secondary-100 text-secondary-700';
   }
 
   formatDate(date: Date): string {

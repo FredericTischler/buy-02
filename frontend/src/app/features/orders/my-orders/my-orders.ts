@@ -2,25 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatBadgeModule } from '@angular/material/badge';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { OrderService } from '../../../core/services/order';
-import { Auth } from '../../../core/services/auth';
-import { Cart } from '../../../core/services/cart';
 import { Order, OrderStatus, OrderSearchParams } from '../../../core/models/order.model';
+import { PageHeader } from '../../../shared/page-header/page-header';
 
 @Component({
   selector: 'app-my-orders',
@@ -28,19 +15,8 @@ import { Order, OrderStatus, OrderSearchParams } from '../../../core/models/orde
   imports: [
     CommonModule,
     FormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatSnackBarModule,
-    MatTableModule,
-    MatTooltipModule,
-    MatToolbarModule,
-    MatBadgeModule
+    PageHeader
   ],
   templateUrl: './my-orders.html',
   styleUrl: './my-orders.scss'
@@ -49,15 +25,12 @@ export class MyOrders implements OnInit {
   orders: Order[] = [];
   isLoading = true;
   selectedStatus: OrderStatus | null = null;
-  cartCount = 0;
 
   // Search and sort
   searchKeyword = '';
   sortBy: 'createdAt' | 'totalAmount' | 'status' = 'createdAt';
   sortDir: 'asc' | 'desc' = 'desc';
   private searchSubject = new Subject<string>();
-
-  displayedColumns = ['id', 'date', 'items', 'total', 'status', 'actions'];
 
   statusOptions = [
     { value: null, label: 'Toutes les commandes' },
@@ -76,18 +49,12 @@ export class MyOrders implements OnInit {
 
   constructor(
     private readonly orderService: OrderService,
-    private readonly authService: Auth,
-    private readonly cartService: Cart,
     private readonly router: Router,
     private readonly snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.loadOrders();
-    this.updateCartCount();
-    this.cartService.cartItems$.subscribe(() => {
-      this.updateCartCount();
-    });
 
     // Set up search debounce
     this.searchSubject.pipe(
@@ -98,25 +65,8 @@ export class MyOrders implements OnInit {
     });
   }
 
-  updateCartCount(): void {
-    this.cartCount = this.cartService.getCartCount();
-  }
-
   goToProducts(): void {
     this.router.navigate(['/products']);
-  }
-
-  goToCart(): void {
-    this.router.navigate(['/cart']);
-  }
-
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 
   loadOrders(): void {
@@ -206,6 +156,19 @@ export class MyOrders implements OnInit {
 
   getStatusColor(status: OrderStatus): string {
     return this.orderService.getStatusColor(status);
+  }
+
+  getStatusBadgeClass(status: OrderStatus): string {
+    const classMap: Record<string, string> = {
+      'PENDING': 'bg-warning-50 text-warning-700',
+      'CONFIRMED': 'bg-primary-50 text-primary-700',
+      'PROCESSING': 'bg-accent-50 text-accent-700',
+      'SHIPPED': 'bg-primary-50 text-primary-700',
+      'DELIVERED': 'bg-success-50 text-success-700',
+      'CANCELLED': 'bg-error-50 text-error-700',
+      'REFUNDED': 'bg-secondary-100 text-secondary-700'
+    };
+    return classMap[status] || 'bg-secondary-100 text-secondary-700';
   }
 
   canCancel(order: Order): boolean {

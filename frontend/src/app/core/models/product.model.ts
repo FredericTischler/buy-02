@@ -7,6 +7,7 @@ export interface Product {
   stock: number;
   sellerId: string;
   sellerName: string;
+  imageUrl?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

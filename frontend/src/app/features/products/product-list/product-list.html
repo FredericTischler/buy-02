@@ -1,210 +1,184 @@
-<div class="product-list-container">
-  <!-- Header avec recherche et déconnexion -->
-  <mat-toolbar color="primary" class="toolbar">
-    <span class="title">🛒 Boutique E-Commerce</span>
-    
-    <span class="spacer"></span>
-    
-    <!-- Barre de recherche -->
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Rechercher un produit</mat-label>
-      <input matInput [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()" placeholder="Ex: Ordinateur">
-      <mat-icon matPrefix>search</mat-icon>
-    </mat-form-field>
+<div class="min-h-screen bg-surface-50">
+  <!-- Navbar -->
+  <app-navbar (search)="onSearchFromNavbar($event)"></app-navbar>
 
-    <!-- Bouton Wishlist avec badge -->
-    <button mat-icon-button (click)="goToWishlist()" matTooltip="Ma Wishlist">
-      <mat-icon [matBadge]="wishlistCount" matBadgeColor="accent" [matBadgeHidden]="wishlistCount === 0">favorite</mat-icon>
-    </button>
-
-    <!-- Bouton Panier avec badge -->
-    <button mat-icon-button class="cart-button" (click)="goToCart()">
-      <mat-icon [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">shopping_cart</mat-icon>
-    </button>
-
-    <!-- Bouton Profil -->
-    <button mat-icon-button (click)="goToProfile()" matTooltip="Mon Profil">
-      <mat-icon>account_circle</mat-icon>
-    </button>
-
-    <!-- Bouton déconnexion -->
-    <button mat-raised-button color="warn" (click)="logout()">
-      <mat-icon>logout</mat-icon>
-      Déconnexion
-    </button>
-  </mat-toolbar>
-
-  <!-- Contenu principal -->
-  <div class="content">
-    <!-- Message de chargement -->
+  <!-- Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Loading -->
     @if (loading) {
-      <div class="loading-container">
-        <mat-spinner></mat-spinner>
-        <p>Chargement des produits...</p>
+      <div class="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div class="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+        <p class="text-secondary-500">Chargement des produits...</p>
       </div>
     }
 
-    <!-- Message d'erreur -->
+    <!-- Error -->
     @if (errorMessage) {
-      <div class="error-container">
-        <mat-icon>error</mat-icon>
-        <p>{{ errorMessage }}</p>
+      <div class="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <svg class="w-16 h-16 text-error-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        <p class="text-secondary-600 text-lg">{{ errorMessage }}</p>
       </div>
     }
 
-    <!-- Liste des produits -->
+    <!-- Products -->
     @if (!loading && !errorMessage) {
-      @if (products.length === 0) {
-        <div class="empty-container">
-          <mat-icon>inventory_2</mat-icon>
-          <p>Aucun produit disponible pour le moment</p>
+      @if (products.length === 0 && !hasActiveFilters() && !searchKeyword) {
+        <div class="flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <svg class="w-20 h-20 text-secondary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <p class="text-secondary-500 text-lg">Aucun produit disponible pour le moment</p>
         </div>
       } @else {
-        <!-- Filtres et Tri -->
-        <div class="filters-section">
-          <div class="filters-header">
-            <button mat-stroked-button (click)="toggleFilters()">
-              <mat-icon>filter_list</mat-icon>
+        <!-- Filters & Sort Bar -->
+        <div class="mb-6 space-y-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <button (click)="toggleFilters()" class="inline-flex items-center gap-2 px-4 py-2 border border-secondary-300 rounded-lg text-sm font-medium text-secondary-700 hover:bg-surface-100 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
               Filtres
               @if (hasActiveFilters()) {
-                <span class="filter-badge">actifs</span>
+                <span class="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-semibold rounded-full">actifs</span>
               }
             </button>
             @if (hasActiveFilters()) {
-              <button mat-button color="warn" (click)="clearFilters()">
-                <mat-icon>clear</mat-icon>
+              <button (click)="clearFilters()" class="inline-flex items-center gap-1 px-3 py-2 text-sm text-error-600 hover:text-error-700 hover:bg-error-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 Effacer
               </button>
             }
 
-            <span class="spacer"></span>
+            <div class="flex-1"></div>
 
-            <!-- Tri -->
-            <mat-form-field appearance="outline" class="sort-field">
-              <mat-label>Trier par</mat-label>
-              <mat-select [(ngModel)]="sortBy" (selectionChange)="onSortChange()">
+            <!-- Sort -->
+            <div class="flex items-center gap-2">
+              <label class="text-sm text-secondary-500">Trier par</label>
+              <select [(ngModel)]="sortBy" (ngModelChange)="onSortChange()" class="px-3 py-2 border border-secondary-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
                 @for (option of sortOptions; track option.value) {
-                  <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                  <option [value]="option.value">{{ option.label }}</option>
                 }
-              </mat-select>
-              <mat-icon matPrefix>sort</mat-icon>
-            </mat-form-field>
+              </select>
+            </div>
 
-            <span class="products-count">{{ totalElements }} produit(s)</span>
+            <span class="text-sm text-secondary-500">{{ totalElements }} produit(s)</span>
           </div>
 
+          <!-- Filter panel -->
           @if (showFilters) {
-            <mat-card class="filters-card">
-              <mat-card-content>
-                <div class="filters-grid">
-                  <!-- Filtre catégorie -->
-                  <mat-form-field appearance="outline">
-                    <mat-label>Catégorie</mat-label>
-                    <mat-select [(ngModel)]="selectedCategory">
-                      <mat-option value="">Toutes les catégories</mat-option>
-                      @for (category of categories; track category) {
-                        <mat-option [value]="category">{{ category }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
-
-                  <!-- Filtre prix min -->
-                  <mat-form-field appearance="outline">
-                    <mat-label>Prix minimum (€)</mat-label>
-                    <input matInput type="number" [(ngModel)]="minPrice" [min]="0" placeholder="0">
-                  </mat-form-field>
-
-                  <!-- Filtre prix max -->
-                  <mat-form-field appearance="outline">
-                    <mat-label>Prix maximum (€)</mat-label>
-                    <input matInput type="number" [(ngModel)]="maxPrice" [min]="0" placeholder="1000">
-                  </mat-form-field>
-                  <!-- Bouton Appliquer -->
-                  <div class="filter-actions">
-                    <button mat-raised-button color="primary" (click)="applyFilters()">
-                      <mat-icon>check</mat-icon>
-                      Appliquer
-                    </button>
-                  </div>
+            <div class="bg-white rounded-xl border border-secondary-200 shadow-card p-6 animate-slide-down">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div>
+                  <label class="block text-sm font-medium text-secondary-700 mb-1.5">Catégorie</label>
+                  <select [(ngModel)]="selectedCategory" class="w-full px-3 py-2.5 border border-secondary-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                    <option value="">Toutes les catégories</option>
+                    @for (category of categories; track category) {
+                      <option [value]="category">{{ category }}</option>
+                    }
+                  </select>
                 </div>
-              </mat-card-content>
-            </mat-card>
+                <div>
+                  <label class="block text-sm font-medium text-secondary-700 mb-1.5">Prix minimum</label>
+                  <input type="number" [(ngModel)]="minPrice" [min]="0" placeholder="0 €" class="w-full px-3 py-2.5 border border-secondary-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-secondary-700 mb-1.5">Prix maximum</label>
+                  <input type="number" [(ngModel)]="maxPrice" [min]="0" placeholder="1000 €" class="w-full px-3 py-2.5 border border-secondary-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                </div>
+                <button (click)="applyFilters()" class="px-6 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  Appliquer
+                </button>
+              </div>
+            </div>
           }
         </div>
 
         @if (products.length === 0) {
-          <div class="empty-container">
-            <mat-icon>search_off</mat-icon>
-            <p>Aucun produit ne correspond aux filtres</p>
-            <button mat-raised-button color="primary" (click)="clearFilters()">
+          <div class="flex flex-col items-center justify-center min-h-[300px] gap-4">
+            <svg class="w-16 h-16 text-secondary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <p class="text-secondary-500">Aucun produit ne correspond aux filtres</p>
+            <button (click)="clearFilters()" class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
               Effacer les filtres
             </button>
           </div>
         } @else {
-          <div class="products-grid">
+          <!-- Products Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @for (product of products; track product.id) {
-            <mat-card class="product-card">
-              <!-- Bouton Wishlist -->
-              <button
-                mat-icon-button
-                class="wishlist-btn"
-                (click)="toggleWishlist(product, $event)"
-                [matTooltip]="isInWishlist(product.id) ? 'Retirer de la wishlist' : 'Ajouter à la wishlist'">
-                <mat-icon [class.in-wishlist]="isInWishlist(product.id)">
-                  {{ isInWishlist(product.id) ? 'favorite' : 'favorite_border' }}
-                </mat-icon>
-              </button>
+              <div class="bg-white rounded-xl border border-secondary-200 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden group relative">
+                <!-- Wishlist button -->
+                <button (click)="toggleWishlist(product, $event)" class="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-sm transition-colors"
+                  [title]="isInWishlist(product.id) ? 'Retirer de la wishlist' : 'Ajouter à la wishlist'">
+                  @if (isInWishlist(product.id)) {
+                    <svg class="w-5 h-5 text-error-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                  } @else {
+                    <svg class="w-5 h-5 text-secondary-400 hover:text-error-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                  }
+                </button>
 
-              <!-- Image du produit -->
-              @if (product.imageUrl) {
-                <img mat-card-image [src]="product.imageUrl" [alt]="product.name" class="product-image">
-              } @else {
-                <div class="no-image">
-                  <mat-icon>image</mat-icon>
-                  <span>Pas d'image</span>
+                <!-- Image -->
+                @if (product.imageUrl) {
+                  <div class="aspect-square overflow-hidden cursor-pointer" (click)="viewDetails(product.id)">
+                    <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  </div>
+                } @else {
+                  <div class="aspect-square bg-surface-100 flex flex-col items-center justify-center text-secondary-300 cursor-pointer" (click)="viewDetails(product.id)">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-sm mt-1">Pas d'image</span>
+                  </div>
+                }
+
+                <!-- Content -->
+                <div class="p-4">
+                  <h3 class="font-semibold text-secondary-800 text-base mb-1 line-clamp-1">{{ product.name }}</h3>
+                  <span class="inline-block px-2 py-0.5 bg-primary-50 text-primary-700 text-xs font-medium rounded-full mb-2">{{ product.category }}</span>
+                  <p class="text-secondary-500 text-sm line-clamp-2 mb-3">{{ product.description }}</p>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xl font-bold text-primary-600">{{ product.price | currency:'EUR' }}</span>
+                    <span class="text-xs font-medium px-2 py-1 rounded-full"
+                      [class]="product.stock < 10 ? 'bg-error-50 text-error-700' : 'bg-success-50 text-success-700'">
+                      Stock: {{ product.stock }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-secondary-400 mb-3">Vendeur: {{ product.sellerName }}</p>
+                  <div class="flex gap-2">
+                    <button (click)="addToCart(product)" class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                      Panier
+                    </button>
+                    <button (click)="viewDetails(product.id)" class="px-3 py-2 border border-secondary-300 text-secondary-700 rounded-lg text-sm font-medium hover:bg-surface-100 transition-colors">
+                      Détails
+                    </button>
+                  </div>
                 </div>
-              }
-              
-              <mat-card-header>
-                <mat-card-title>{{ product.name }}</mat-card-title>
-                <mat-card-subtitle>{{ product.category }}</mat-card-subtitle>
-              </mat-card-header>
-              
-              <mat-card-content>
-                <p class="description">{{ product.description }}</p>
-                <div class="product-info">
-                  <span class="price">{{ product.price | currency:'EUR' }}</span>
-                  <span class="stock" [class.low-stock]="product.stock < 10">
-                    Stock: {{ product.stock }}
-                  </span>
-                </div>
-                <p class="seller">Vendeur: {{ product.sellerName }}</p>
-              </mat-card-content>
-              
-              <mat-card-actions>
-                <button mat-raised-button color="primary" (click)="addToCart(product)">
-                  <mat-icon>shopping_cart</mat-icon>
-                  Ajouter au panier
-                </button>
-                <button mat-button color="accent" (click)="viewDetails(product.id)">
-                  <mat-icon>info</mat-icon>
-                  Détails
-                </button>
-              </mat-card-actions>
-            </mat-card>
-          }
+              </div>
+            }
           </div>
 
           <!-- Pagination -->
           @if (totalElements > pageSize) {
-            <mat-paginator
-              [length]="totalElements"
-              [pageSize]="pageSize"
-              [pageIndex]="pageIndex"
-              [pageSizeOptions]="pageSizeOptions"
-              (page)="onPageChange($event)"
-              showFirstLastButtons>
-            </mat-paginator>
+            <div class="flex items-center justify-center gap-2 mt-8">
+              <button (click)="onPageChange({ pageIndex: 0, pageSize: pageSize })" [disabled]="pageIndex === 0"
+                class="p-2 rounded-lg border border-secondary-300 text-secondary-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+              </button>
+              <button (click)="onPageChange({ pageIndex: pageIndex - 1, pageSize: pageSize })" [disabled]="pageIndex === 0"
+                class="p-2 rounded-lg border border-secondary-300 text-secondary-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              @for (p of pages; track p) {
+                <button (click)="onPageChange({ pageIndex: p, pageSize: pageSize })"
+                  class="w-10 h-10 rounded-lg text-sm font-medium transition-colors"
+                  [class]="p === pageIndex ? 'bg-primary-600 text-white' : 'border border-secondary-300 text-secondary-600 hover:bg-surface-100'">
+                  {{ p + 1 }}
+                </button>
+              }
+              <button (click)="onPageChange({ pageIndex: pageIndex + 1, pageSize: pageSize })" [disabled]="pageIndex >= totalPages - 1"
+                class="p-2 rounded-lg border border-secondary-300 text-secondary-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </button>
+              <button (click)="onPageChange({ pageIndex: totalPages - 1, pageSize: pageSize })" [disabled]="pageIndex >= totalPages - 1"
+                class="p-2 rounded-lg border border-secondary-300 text-secondary-600 hover:bg-surface-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+              </button>
+            </div>
           }
         }
       }

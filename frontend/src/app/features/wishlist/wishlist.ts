@@ -1,32 +1,22 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { WishlistService } from '../../core/services/wishlist';
 import { Product } from '../../core/services/product';
 import { MediaService } from '../../core/services/media';
 import { Cart } from '../../core/services/cart';
 import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError, map, switchMap, skip } from 'rxjs/operators';
+import { PageHeader } from '../../shared/page-header/page-header';
 
 @Component({
   selector: 'app-wishlist',
   standalone: true,
   imports: [
     CommonModule,
-    MatToolbarModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatTooltipModule
+    PageHeader
   ],
   templateUrl: './wishlist.html',
   styleUrl: './wishlist.scss'
@@ -58,7 +48,6 @@ export class WishlistPage implements OnInit, OnDestroy {
     this.loading = true;
     this.errorMessage = '';
 
-    // Récupérer les IDs depuis le backend sans mettre à jour le subject (évite boucle infinie)
     this.wishlistService.getWishlistIds().pipe(
       switchMap(productIds => {
         if (productIds.length === 0) {
@@ -98,7 +87,6 @@ export class WishlistPage implements OnInit, OnDestroy {
   removeFromWishlist(product: any): void {
     this.wishlistService.removeFromWishlist(product.id).subscribe({
       next: () => {
-        // Retirer le produit localement sans recharger
         this.products = this.products.filter(p => p.id !== product.id);
         this.snackBar.open(`${product.name} retiré de la wishlist`, 'Fermer', {
           duration: 2000
@@ -174,6 +162,12 @@ export class WishlistPage implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  getStockBadgeClass(product: any): string {
+    if (product.stock === 0) return 'bg-error-50 text-error-700';
+    if (product.stock < 10) return 'bg-warning-50 text-warning-700';
+    return 'bg-success-50 text-success-700';
   }
 
   goBack(): void {

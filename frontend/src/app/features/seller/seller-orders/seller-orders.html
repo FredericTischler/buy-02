@@ -1,194 +1,176 @@
-<mat-toolbar color="primary" class="seller-toolbar">
-  <button mat-icon-button (click)="goToDashboard()" matTooltip="Retour au tableau de bord">
-    <mat-icon>arrow_back</mat-icon>
-  </button>
-  <span class="toolbar-title">Commandes Vendeur</span>
-  <span class="toolbar-spacer"></span>
-  <button mat-icon-button (click)="goToProducts()" matTooltip="Voir le catalogue">
-    <mat-icon>storefront</mat-icon>
-  </button>
-  <button mat-raised-button color="warn" (click)="logout()">
-    <mat-icon>logout</mat-icon>
-    Déconnexion
-  </button>
-</mat-toolbar>
+<div class="min-h-screen bg-surface-50">
+  <app-page-header title="Commandes Vendeur" (back)="goToDashboard()">
+    <button class="p-2 text-secondary-500 hover:text-primary-600 transition-colors" (click)="goToProducts()">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    </button>
+    <button class="px-4 py-2 bg-error-500 hover:bg-error-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2" (click)="logout()">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </button>
+  </app-page-header>
 
-<div class="seller-orders-container">
-  <!-- Stats Section -->
-  <mat-card class="stats-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>analytics</mat-icon>
-        Statistiques de ventes
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <!-- Stats Section -->
+    <div class="bg-white rounded-xl shadow-card p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <h3 class="text-lg font-semibold text-secondary-800">Statistiques de ventes</h3>
+      </div>
       @if (statsLoading) {
-        <div class="stats-loading">
-          <mat-spinner diameter="30"></mat-spinner>
+        <div class="flex justify-center py-6">
+          <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
         </div>
       } @else if (stats) {
-        <div class="stats-grid">
-          <div class="stat-item">
-            <mat-icon class="stat-icon orders-icon">receipt_long</mat-icon>
-            <div class="stat-content">
-              <span class="stat-value">{{ stats.totalOrders }}</span>
-              <span class="stat-label">Commandes totales</span>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="flex items-center gap-3 p-4 bg-surface-50 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+            <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <div>
+              <span class="block text-xl font-bold text-secondary-800">{{ stats.totalOrders }}</span>
+              <span class="text-xs text-secondary-500">Commandes totales</span>
             </div>
           </div>
-          <div class="stat-item">
-            <mat-icon class="stat-icon completed-icon">check_circle</mat-icon>
-            <div class="stat-content">
-              <span class="stat-value">{{ stats.completedOrders }}</span>
-              <span class="stat-label">Commandes livrées</span>
+          <div class="flex items-center gap-3 p-4 bg-surface-50 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+            <svg class="w-8 h-8 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <span class="block text-xl font-bold text-secondary-800">{{ stats.completedOrders }}</span>
+              <span class="text-xs text-secondary-500">Commandes livrées</span>
             </div>
           </div>
-          <div class="stat-item">
-            <mat-icon class="stat-icon items-icon">inventory_2</mat-icon>
-            <div class="stat-content">
-              <span class="stat-value">{{ stats.totalItemsSold }}</span>
-              <span class="stat-label">Articles vendus</span>
+          <div class="flex items-center gap-3 p-4 bg-surface-50 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+            <svg class="w-8 h-8 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <div>
+              <span class="block text-xl font-bold text-secondary-800">{{ stats.totalItemsSold }}</span>
+              <span class="text-xs text-secondary-500">Articles vendus</span>
             </div>
           </div>
-          <div class="stat-item highlight">
-            <mat-icon class="stat-icon money-icon">euro</mat-icon>
-            <div class="stat-content">
-              <span class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</span>
-              <span class="stat-label">Chiffre d'affaires</span>
+          <div class="flex items-center gap-3 p-4 bg-gradient-to-br from-success-50 to-success-100 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+            <svg class="w-8 h-8 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <span class="block text-xl font-bold text-secondary-800">{{ formatCurrency(stats.totalRevenue) }}</span>
+              <span class="text-xs text-secondary-500">Chiffre d'affaires</span>
             </div>
           </div>
         </div>
       }
-    </mat-card-content>
-  </mat-card>
+    </div>
 
-  <!-- Orders Section -->
-  <mat-card class="orders-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>local_shipping</mat-icon>
-        Commandes contenant mes produits
-      </mat-card-title>
-    </mat-card-header>
+    <!-- Orders Section -->
+    <div class="bg-white rounded-xl shadow-card p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-warning-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+        <h3 class="text-lg font-semibold text-secondary-800">Commandes contenant mes produits</h3>
+      </div>
 
-    <mat-card-content>
       <!-- Search and Filter -->
-      <div class="search-filter-section">
-        <!-- Search bar -->
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Rechercher</mat-label>
-          <input matInput [(ngModel)]="searchKeyword" (ngModelChange)="onSearchChange()"
-                 placeholder="ID commande, produit, client...">
-          <mat-icon matPrefix>search</mat-icon>
+      <div class="flex flex-col sm:flex-row flex-wrap gap-3 mb-6 p-4 bg-surface-50 rounded-lg">
+        <div class="relative flex-1 min-w-[200px]">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" [(ngModel)]="searchKeyword" (ngModelChange)="onSearchChange()"
+            placeholder="ID commande, produit, client..."
+            class="w-full pl-10 pr-10 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
           @if (searchKeyword) {
-            <button mat-icon-button matSuffix (click)="clearSearch()">
-              <mat-icon>close</mat-icon>
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-400 hover:text-secondary-600" (click)="clearSearch()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           }
-        </mat-form-field>
-
-        <!-- Status filter -->
-        <mat-form-field appearance="outline" class="status-field">
-          <mat-label>Statut</mat-label>
-          <mat-select [(value)]="selectedStatus" (selectionChange)="onStatusFilterChange()">
-            @for (option of statusOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <!-- Sort -->
-        <mat-form-field appearance="outline" class="sort-field">
-          <mat-label>Trier par</mat-label>
-          <mat-select [(value)]="sortBy" (selectionChange)="onSortChange()">
-            @for (option of sortOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <button mat-icon-button (click)="toggleSortDir()" matTooltip="{{ sortDir === 'asc' ? 'Croissant' : 'Décroissant' }}">
-          <mat-icon>{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+        </div>
+        <select [(ngModel)]="selectedStatus" (ngModelChange)="onStatusFilterChange()"
+          class="px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white sm:w-[180px]">
+          @for (option of statusOptions; track option.value) {
+            <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        <select [(ngModel)]="sortBy" (ngModelChange)="onSortChange()"
+          class="px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white sm:w-[140px]">
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        <button class="p-2.5 border border-secondary-300 rounded-lg hover:bg-surface-100 transition-colors" (click)="toggleSortDir()">
+          @if (sortDir === 'asc') {
+            <svg class="w-5 h-5 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          } @else {
+            <svg class="w-5 h-5 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          }
         </button>
       </div>
 
       @if (isLoading) {
-        <div class="loading-container">
-          <mat-spinner diameter="40"></mat-spinner>
+        <div class="flex justify-center py-16">
+          <div class="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
         </div>
       } @else if (orders.length === 0) {
-        <div class="empty-state">
-          <mat-icon>inbox</mat-icon>
-          <p>Aucune commande trouvée</p>
-          <span class="empty-hint">Les commandes contenant vos produits apparaitront ici</span>
+        <div class="flex flex-col items-center py-16">
+          <svg class="w-16 h-16 text-secondary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+          <p class="text-secondary-500 mt-4 text-lg">Aucune commande trouvée</p>
+          <span class="text-secondary-400 text-sm mt-1">Les commandes contenant vos produits apparaitront ici</span>
         </div>
       } @else {
-        <div class="orders-list">
+        <div class="space-y-4">
           @for (order of orders; track order.id) {
-            <mat-card class="order-card">
-              <div class="order-header">
-                <div class="order-info">
-                  <span class="order-id">Commande #{{ order.id.slice(0, 8) }}</span>
-                  <span class="order-date">{{ formatDate(order.createdAt) }}</span>
+            <div class="border border-secondary-200 rounded-xl p-5 hover:shadow-card transition-all">
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                <div>
+                  <span class="font-semibold text-secondary-800">Commande #{{ order.id.slice(0, 8) }}</span>
+                  <span class="block text-sm text-secondary-500 mt-0.5">{{ formatDate(order.createdAt) }}</span>
                 </div>
-                <mat-chip [color]="getStatusColor(order.status)" selected>
-                  <mat-icon class="chip-icon">{{ getStatusIcon(order.status) }}</mat-icon>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold self-start" [ngClass]="getStatusBadgeClass(order.status)">
                   {{ getStatusDisplay(order.status) }}
-                </mat-chip>
+                </span>
               </div>
 
               <!-- Customer Info -->
-              <div class="customer-info">
-                <mat-icon>person</mat-icon>
-                <div class="customer-details">
-                  <span class="customer-name">{{ order.userName }}</span>
-                  <span class="customer-email">{{ order.userEmail }}</span>
+              <div class="flex items-center gap-3 p-3 bg-surface-50 rounded-lg mb-4">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <div>
+                  <p class="font-medium text-secondary-800 text-sm">{{ order.userName }}</p>
+                  <p class="text-xs text-secondary-500">{{ order.userEmail }}</p>
                 </div>
               </div>
 
-              <mat-divider></mat-divider>
-
-              <!-- My Items in this order -->
-              <div class="my-items">
-                <span class="items-title">Mes produits dans cette commande:</span>
+              <div class="border-t border-secondary-100 pt-4 mb-4">
+                <span class="block text-sm text-secondary-500 font-medium mb-2">Mes produits dans cette commande:</span>
                 @for (item of getMyItemsFromOrder(order); track item.productName) {
-                  <div class="item-row">
-                    <span class="item-name">{{ item.productName }}</span>
-                    <span class="item-qty">x{{ item.quantity }}</span>
-                    <span class="item-price">{{ formatCurrency(item.price * item.quantity) }}</span>
+                  <div class="flex items-center py-1.5 text-sm border-b border-secondary-50 last:border-0">
+                    <span class="flex-1 text-secondary-800">{{ item.productName }}</span>
+                    <span class="text-secondary-500 mx-4">x{{ item.quantity }}</span>
+                    <span class="font-medium text-primary-600">{{ formatCurrency(item.price * item.quantity) }}</span>
                   </div>
                 }
               </div>
 
-              <div class="order-footer">
-                <div class="order-totals">
-                  <span class="my-total">Mon total: {{ formatCurrency(getMyItemsTotal(order)) }}</span>
-                  <span class="order-total-hint">Total commande: {{ formatCurrency(order.totalAmount) }}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-secondary-100">
+                <div>
+                  <span class="block font-semibold text-success-600">Mon total: {{ formatCurrency(getMyItemsTotal(order)) }}</span>
+                  <span class="text-xs text-secondary-400">Total commande: {{ formatCurrency(order.totalAmount) }}</span>
                 </div>
-                <div class="order-actions">
+                <div class="flex items-center gap-2">
                   @if (canUpdateStatus(order)) {
-                    <button mat-raised-button color="primary" [matMenuTriggerFor]="statusMenu">
-                      <mat-icon>update</mat-icon>
-                      Modifier statut
-                    </button>
-                    <mat-menu #statusMenu="matMenu">
-                      @for (status of getAvailableTransitions(order); track status) {
-                        <button mat-menu-item (click)="updateStatus(order, status)">
-                          <mat-icon>{{ getStatusIcon(status) }}</mat-icon>
-                          <span>{{ getStatusDisplay(status) }}</span>
-                        </button>
+                    <div class="relative">
+                      <button class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2" (click)="toggleDropdown(order.id)">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Modifier statut
+                      </button>
+                      @if (openDropdownId === order.id) {
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-secondary-200 z-50 py-1">
+                          @for (status of getAvailableTransitions(order); track status) {
+                            <button class="w-full text-left px-4 py-2.5 text-sm hover:bg-surface-50 transition-colors text-secondary-700" (click)="updateStatus(order, status)">
+                              {{ getStatusDisplay(status) }}
+                            </button>
+                          }
+                        </div>
                       }
-                    </mat-menu>
+                    </div>
                   }
-                  <button mat-icon-button matTooltip="Voir détails" (click)="viewOrder(order)">
-                    <mat-icon>visibility</mat-icon>
+                  <button class="p-2 text-secondary-500 hover:bg-surface-100 rounded-lg transition-colors" title="Voir détails" (click)="viewOrder(order)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   </button>
                 </div>
               </div>
-            </mat-card>
+            </div>
           }
         </div>
       }
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 </div>

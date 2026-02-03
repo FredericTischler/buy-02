@@ -2,12 +2,6 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Product } from '../../../core/models/product.model';
 import { Product as ProductService } from '../../../core/services/product';
 import { MediaService } from '../../../core/services/media';
@@ -23,13 +17,7 @@ export interface DialogData {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule
+    MatDialogModule
   ],
   templateUrl: './product-form-dialog.html',
   styleUrl: './product-form-dialog.scss'
@@ -40,8 +28,8 @@ export class ProductFormDialog implements OnInit {
   errorMessage = '';
   selectedFiles: File[] = [];
   imagePreviews: string[] = [];
-  existingImages: any[] = []; // Images déjà sauvegardées
-  imagesToDelete: string[] = []; // IDs des images à supprimer
+  existingImages: any[] = [];
+  imagesToDelete: string[] = [];
   uploadProgress = 0;
   totalImages = 0;
 
@@ -83,7 +71,6 @@ export class ProductFormDialog implements OnInit {
         category: this.data.product.category
       });
 
-      // Charger les images existantes
       this.loadExistingImages(this.data.product.id);
     }
   }
@@ -111,26 +98,21 @@ export class ProductFormDialog implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files) {
       const files = Array.from(input.files);
-      
-      // Validate files
+
       for (const file of files) {
-        // Check file type
         if (!file.type.startsWith('image/')) {
           this.errorMessage = `Le fichier ${file.name} n'est pas une image`;
           return;
         }
-        
-        // Check file size (max 2MB)
+
         if (file.size > 2 * 1024 * 1024) {
           this.errorMessage = `Le fichier ${file.name} est trop grand (max 2MB)`;
           return;
         }
       }
 
-      // Add files to selection
       this.selectedFiles.push(...files);
-      
-      // Generate previews
+
       files.forEach(file => {
         const reader = new FileReader();
         reader.onload = (e: any) => {
@@ -165,18 +147,15 @@ export class ProductFormDialog implements OnInit {
       let productId: string;
 
       if (this.data.mode === 'edit' && this.data.product) {
-        // Update existing product
         await this.productService.updateProduct(this.data.product.id, productData).toPromise();
         productId = this.data.product.id;
 
-        // Supprimer les images marquées pour suppression
         if (this.imagesToDelete.length > 0) {
           for (const imageId of this.imagesToDelete) {
             await this.mediaService.deleteMedia(imageId).toPromise();
           }
         }
       } else {
-        // Create new product
         const newProduct = await this.productService.createProduct(productData).toPromise();
         if (!newProduct) {
           throw new Error('Failed to create product');
@@ -184,7 +163,6 @@ export class ProductFormDialog implements OnInit {
         productId = newProduct.id;
       }
 
-      // Upload new images if any
       if (this.selectedFiles.length > 0) {
         this.totalImages = this.selectedFiles.length;
         this.uploadProgress = 0;
@@ -195,7 +173,6 @@ export class ProductFormDialog implements OnInit {
         }
       }
 
-      // Success
       this.dialogRef.close({ success: true, productId });
 
     } catch (error: any) {

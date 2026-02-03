@@ -71,6 +71,25 @@ export class Product {
   }
 
   /**
+   * Récupérer les produits avec pagination, tri et filtres
+   */
+  getProducts(
+    page: number, size: number, sort: string,
+    keyword?: string, category?: string,
+    minPrice?: number, maxPrice?: number
+  ): Observable<Page<ProductModel>> {
+    const [sortBy, sortDir] = sort.includes(',') ? sort.split(',') : [sort, 'asc'];
+    return this.filterProducts({ page, size, sortBy, sortDir, keyword, category, minPrice, maxPrice });
+  }
+
+  /**
+   * Récupérer les catégories disponibles
+   */
+  getCategories(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.API_URL}/categories`);
+  }
+
+  /**
    * Recherche avancée avec filtres et pagination
    */
   filterProducts(params: {

@@ -2,41 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-
 import { Cart } from '../../../core/services/cart';
 import { OrderService } from '../../../core/services/order';
 import { CartItem } from '../../../core/models/cart.model';
 import { OrderRequest, OrderItemRequest } from '../../../core/models/order.model';
+import { PageHeader } from '../../../shared/page-header/page-header';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatToolbarModule,
-    MatTooltipModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule, PageHeader],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss'
 })
@@ -82,7 +58,6 @@ export class Checkout implements OnInit {
       this.cartItems = items;
       this.cartTotal = this.cartService.getCartTotal();
       this.isLoading = false;
-
       if (items.length === 0) {
         this.snackBar.open('Votre panier est vide', 'OK', { duration: 3000 });
         this.router.navigate(['/cart']);
@@ -91,25 +66,13 @@ export class Checkout implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.checkoutForm.invalid) {
-      this.markFormGroupTouched();
-      return;
-    }
-
-    if (this.cartItems.length === 0) {
-      this.snackBar.open('Votre panier est vide', 'Erreur', { duration: 3000 });
-      return;
-    }
+    if (this.checkoutForm.invalid) { this.markFormGroupTouched(); return; }
+    if (this.cartItems.length === 0) { this.snackBar.open('Votre panier est vide', 'Erreur', { duration: 3000 }); return; }
 
     this.isSubmitting = true;
-
     const orderItems: OrderItemRequest[] = this.cartItems.map(item => ({
-      productId: item.productId,
-      productName: item.name,
-      sellerId: item.sellerId,
-      sellerName: item.sellerName,
-      price: item.price,
-      quantity: item.quantity,
+      productId: item.productId, productName: item.name, sellerId: item.sellerId,
+      sellerName: item.sellerName, price: item.price, quantity: item.quantity,
       imageUrl: item.imageUrl || undefined
     }));
 
@@ -145,15 +108,5 @@ export class Checkout implements OnInit {
     });
   }
 
-  goBack(): void {
-    this.router.navigate(['/cart']);
-  }
-
-  goToProducts(): void {
-    this.router.navigate(['/products']);
-  }
-
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
-  }
+  goBack(): void { this.router.navigate(['/cart']); }
 }

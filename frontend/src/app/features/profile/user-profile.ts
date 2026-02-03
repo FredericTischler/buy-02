@@ -1,15 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatBadgeModule } from '@angular/material/badge';
 
 import { Auth } from '../../core/services/auth';
 import { OrderService } from '../../core/services/order';
@@ -18,21 +10,15 @@ import { MediaService } from '../../core/services/media';
 import { User } from '../../core/models/user.model';
 import { UserOrderStats, UserProductStats } from '../../core/models/order.model';
 import { resolveApiBase } from '../../core/utils/api-host';
+import { PageHeader } from '../../shared/page-header/page-header';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatDividerModule,
     MatSnackBarModule,
-    MatChipsModule,
-    MatToolbarModule,
-    MatBadgeModule
+    PageHeader
   ],
   templateUrl: './user-profile.html',
   styleUrl: './user-profile.scss'
@@ -61,9 +47,8 @@ export class UserProfile implements OnInit {
     this.loadUserProfile();
     this.loadUserStats();
     this.loadUserProductStats();
-    this.updateCartCount();
     this.cartService.cartItems$.subscribe(() => {
-      this.updateCartCount();
+      this.cartCount = this.cartService.getCartCount();
     });
   }
 
@@ -118,10 +103,6 @@ export class UserProfile implements OnInit {
     this.router.navigate(['/products', productId]);
   }
 
-  updateCartCount(): void {
-    this.cartCount = this.cartService.getCartCount();
-  }
-
   getAvatarUrl(): string {
     if (this.user?.avatar) {
       return `${this.userApiBase}${this.user.avatar}`;
@@ -145,11 +126,6 @@ export class UserProfile implements OnInit {
   getRoleDisplay(): string {
     if (!this.user) return '';
     return this.user.role === 'SELLER' ? 'Vendeur' : 'Client';
-  }
-
-  getRoleIcon(): string {
-    if (!this.user) return 'person';
-    return this.user.role === 'SELLER' ? 'storefront' : 'shopping_bag';
   }
 
   formatDate(date: Date | undefined): string {

@@ -1,30 +1,11 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
 import { Auth } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-register',
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    RouterLink,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatSelectModule
-  ],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
@@ -54,23 +35,16 @@ export class Register {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (file) {
-      
-      // Validation taille
       if (file.size > 5 * 1024 * 1024) {
         this.errorMessage = 'L\'image ne doit pas dépasser 5MB';
         return;
       }
-      
-      // Validation type
       if (!file.type.startsWith('image/')) {
         this.errorMessage = 'Le fichier doit être une image';
         return;
       }
-      
       this.selectedAvatar = file;
       this.errorMessage = '';
-      
-      // Générer la preview
       const reader = new FileReader();
       reader.onload = () => {
         this.avatarPreview = reader.result as string;
@@ -88,14 +62,12 @@ export class Register {
     if (this.registerForm.invalid) {
       return;
     }
-
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
     this.authService.register(this.registerForm.value).subscribe({
-      next: (response) => {
-        // Si avatar sélectionné, se connecter puis uploader l'avatar
+      next: () => {
         if (this.selectedAvatar) {
           this.loginAndUploadAvatar();
         } else {
@@ -103,7 +75,6 @@ export class Register {
         }
       },
       error: (error) => {
-        console.error('Erreur d\'inscription:', error);
         this.errorMessage = error.error?.error || 'Une erreur est survenue lors de l\'inscription';
         this.loading = false;
       }
@@ -113,15 +84,11 @@ export class Register {
   private loginAndUploadAvatar(): void {
     const email = this.registerForm.get('email')?.value;
     const password = this.registerForm.get('password')?.value;
-    
-    // Se connecter pour obtenir le token
     this.authService.login({ email, password }).subscribe({
       next: (loginResponse) => {
-        // Uploader l'avatar avec le token
         this.uploadAvatar(loginResponse.token);
       },
-      error: (error) => {
-        console.error('Erreur de connexion automatique:', error);
+      error: () => {
         this.showSuccessAndRedirect();
       }
     });
@@ -129,14 +96,11 @@ export class Register {
 
   private uploadAvatar(token: string): void {
     if (!this.selectedAvatar) return;
-    
     this.authService.uploadAvatar(this.selectedAvatar, token).subscribe({
       next: () => {
         this.showSuccessAndRedirect();
       },
-      error: (error) => {
-        console.error('Erreur upload avatar:', error);
-        // Continuer même si l'avatar échoue
+      error: () => {
         this.showSuccessAndRedirect();
       }
     });

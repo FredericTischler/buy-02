@@ -1,219 +1,194 @@
-<mat-toolbar color="primary" class="profile-toolbar">
-  <button mat-icon-button (click)="goToProducts()">
-    <mat-icon>arrow_back</mat-icon>
-  </button>
-  <span class="toolbar-title">Mon Profil</span>
-  <span class="toolbar-spacer"></span>
-  <button mat-icon-button (click)="goToCart()" [matBadge]="cartCount" matBadgeColor="warn" [matBadgeHidden]="cartCount === 0">
-    <mat-icon>shopping_cart</mat-icon>
-  </button>
-  <button mat-icon-button (click)="logout()">
-    <mat-icon>logout</mat-icon>
-  </button>
-</mat-toolbar>
+<div class="min-h-screen bg-surface-50">
+  <app-page-header title="Mon Profil" (back)="goToProducts()">
+    <button class="px-4 py-2 bg-error-500 hover:bg-error-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2" (click)="logout()">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </button>
+  </app-page-header>
 
-<div class="profile-container">
-  @if (isLoading) {
-    <div class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Chargement du profil...</p>
-    </div>
-  } @else if (user) {
-    <!-- User Info Card -->
-    <mat-card class="user-card">
-      <mat-card-content>
-        <div class="user-header">
-          <div class="avatar-section">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    @if (isLoading) {
+      <div class="flex flex-col items-center justify-center py-20">
+        <div class="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+        <p class="text-secondary-500 mt-4">Chargement du profil...</p>
+      </div>
+    } @else if (user) {
+      <!-- User Info Card -->
+      <div class="bg-white rounded-xl shadow-card p-6 sm:p-8">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div class="flex-shrink-0">
             @if (hasAvatar()) {
-              <img [src]="getAvatarUrl()" alt="Avatar" class="user-avatar" />
+              <img [src]="getAvatarUrl()" alt="Avatar" class="w-24 h-24 rounded-full object-cover border-3 border-primary-500 ring-4 ring-primary-100">
             } @else {
-              <div class="avatar-placeholder">
-                <span>{{ getInitials() }}</span>
+              <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-3xl font-medium ring-4 ring-primary-100">
+                {{ getInitials() }}
               </div>
             }
           </div>
-          <div class="user-info">
-            <h1 class="user-name">{{ user.name }}</h1>
-            <p class="user-email">
-              <mat-icon class="info-icon">email</mat-icon>
+          <div class="flex-1 text-center sm:text-left">
+            <h2 class="text-2xl font-bold text-secondary-800">{{ user.name }}</h2>
+            <p class="flex items-center justify-center sm:justify-start gap-2 text-secondary-500 mt-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
               {{ user.email }}
             </p>
-            <mat-chip-set>
-              <mat-chip [highlighted]="user.role === 'SELLER'">
-                <mat-icon matChipAvatar>{{ getRoleIcon() }}</mat-icon>
-                {{ getRoleDisplay() }}
-              </mat-chip>
-            </mat-chip-set>
+            <span class="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-sm font-medium" [ngClass]="user.role === 'SELLER' ? 'bg-accent-50 text-accent-700' : 'bg-primary-50 text-primary-700'">
+              @if (user.role === 'SELLER') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+              }
+              {{ getRoleDisplay() }}
+            </span>
           </div>
         </div>
 
-        <mat-divider class="section-divider"></mat-divider>
-
-        <div class="user-details">
-          <div class="detail-item">
-            <mat-icon>calendar_today</mat-icon>
-            <div class="detail-content">
-              <span class="detail-label">Membre depuis</span>
-              <span class="detail-value">{{ formatDate(user.createdAt) }}</span>
+        <div class="border-t border-secondary-200 mt-6 pt-6">
+          <div class="flex items-center gap-4">
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div>
+              <span class="block text-xs uppercase tracking-wide text-secondary-400">Membre depuis</span>
+              <span class="text-secondary-800">{{ formatDate(user.createdAt) }}</span>
             </div>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
 
-    <!-- Stats Card -->
-    <mat-card class="stats-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>analytics</mat-icon>
-          Mes Statistiques
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
+      <!-- Stats Card -->
+      <div class="bg-white rounded-xl shadow-card p-6">
+        <div class="flex items-center gap-2 mb-5">
+          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <h3 class="text-lg font-semibold text-secondary-800">Mes Statistiques</h3>
+        </div>
         @if (statsLoading) {
-          <div class="stats-loading">
-            <mat-spinner diameter="30"></mat-spinner>
+          <div class="flex justify-center py-8">
+            <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
           </div>
         } @else if (stats) {
-          <div class="stats-grid">
-            <div class="stat-item">
-              <mat-icon class="stat-icon orders-icon">receipt_long</mat-icon>
-              <div class="stat-content">
-                <span class="stat-value">{{ stats.totalOrders }}</span>
-                <span class="stat-label">Commandes totales</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="flex items-center gap-4 p-4 bg-surface-50 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+              <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              <div>
+                <span class="block text-2xl font-bold text-secondary-800">{{ stats.totalOrders }}</span>
+                <span class="text-sm text-secondary-500">Commandes totales</span>
               </div>
             </div>
-            <div class="stat-item">
-              <mat-icon class="stat-icon completed-icon">check_circle</mat-icon>
-              <div class="stat-content">
-                <span class="stat-value">{{ stats.completedOrders }}</span>
-                <span class="stat-label">Commandes livrées</span>
+            <div class="flex items-center gap-4 p-4 bg-surface-50 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+              <svg class="w-8 h-8 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <div>
+                <span class="block text-2xl font-bold text-secondary-800">{{ stats.completedOrders }}</span>
+                <span class="text-sm text-secondary-500">Commandes livrées</span>
               </div>
             </div>
-            <div class="stat-item highlight">
-              <mat-icon class="stat-icon money-icon">payments</mat-icon>
-              <div class="stat-content">
-                <span class="stat-value">{{ formatCurrency(stats.totalSpent) }}</span>
-                <span class="stat-label">Total dépensé</span>
+            <div class="flex items-center gap-4 p-4 bg-primary-50 rounded-xl hover:-translate-y-0.5 hover:shadow-card transition-all">
+              <svg class="w-8 h-8 text-warning-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <div>
+                <span class="block text-2xl font-bold text-secondary-800">{{ formatCurrency(stats.totalSpent) }}</span>
+                <span class="text-sm text-secondary-500">Total dépensé</span>
               </div>
             </div>
           </div>
         } @else {
-          <p class="no-stats">Aucune statistique disponible</p>
+          <p class="text-center text-secondary-500 py-6">Aucune statistique disponible</p>
         }
-      </mat-card-content>
-    </mat-card>
+      </div>
 
-    <!-- Most Purchased Products Card -->
-    @if (productStats && productStats.mostPurchasedProducts.length > 0) {
-      <mat-card class="products-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>favorite</mat-icon>
-            Mes produits préférés
-          </mat-card-title>
-          <mat-card-subtitle>
-            {{ productStats.totalUniqueProducts }} produits achetés ({{ productStats.totalItemsPurchased }} articles)
-          </mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
+      <!-- Most Purchased Products Card -->
+      @if (productStats && productStats.mostPurchasedProducts.length > 0) {
+        <div class="bg-white rounded-xl shadow-card p-6">
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-5 h-5 text-error-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <h3 class="text-lg font-semibold text-secondary-800">Mes produits préférés</h3>
+          </div>
+          <p class="text-sm text-secondary-500 mb-5">{{ productStats.totalUniqueProducts }} produits achetés ({{ productStats.totalItemsPurchased }} articles)</p>
           @if (productStatsLoading) {
-            <div class="stats-loading">
-              <mat-spinner diameter="30"></mat-spinner>
+            <div class="flex justify-center py-8">
+              <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
             </div>
           } @else {
-            <div class="products-list">
+            <div class="space-y-3">
               @for (product of productStats.mostPurchasedProducts; track product.productId) {
-                <div class="product-item" (click)="goToProduct(product.productId)">
-                  <div class="product-image">
+                <div class="flex items-center gap-4 p-3 rounded-xl bg-surface-50 hover:bg-surface-100 cursor-pointer transition-all hover:translate-x-1" (click)="goToProduct(product.productId)">
+                  <div class="w-14 h-14 rounded-lg overflow-hidden bg-secondary-200 flex-shrink-0 flex items-center justify-center">
                     @if (product.imageUrl) {
-                      <img [src]="getProductImageUrl(product.imageUrl)" [alt]="product.productName" />
+                      <img [src]="getProductImageUrl(product.imageUrl)" [alt]="product.productName" class="w-full h-full object-cover">
                     } @else {
-                      <mat-icon class="no-image">inventory_2</mat-icon>
+                      <svg class="w-6 h-6 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     }
                   </div>
-                  <div class="product-info">
-                    <span class="product-name">{{ product.productName }}</span>
-                    <span class="product-seller">{{ product.sellerName }}</span>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-secondary-800 truncate">{{ product.productName }}</p>
+                    <p class="text-sm text-secondary-500">{{ product.sellerName }}</p>
                   </div>
-                  <div class="product-stats">
-                    <span class="quantity-badge">{{ product.totalQuantity }}x</span>
-                    <span class="total-spent">{{ formatCurrency(product.totalSpent) }}</span>
+                  <div class="flex flex-col items-end gap-1">
+                    <span class="bg-primary-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">{{ product.totalQuantity }}x</span>
+                    <span class="text-sm font-semibold text-success-600">{{ formatCurrency(product.totalSpent) }}</span>
                   </div>
                 </div>
               }
             </div>
           }
-        </mat-card-content>
-      </mat-card>
-    }
+        </div>
+      }
 
-    <!-- Top Sellers Card -->
-    @if (productStats && productStats.topCategories.length > 0) {
-      <mat-card class="categories-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>storefront</mat-icon>
-            Mes vendeurs préférés
-          </mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="categories-list">
+      <!-- Top Sellers Card -->
+      @if (productStats && productStats.topCategories.length > 0) {
+        <div class="bg-white rounded-xl shadow-card p-6">
+          <div class="flex items-center gap-2 mb-5">
+            <svg class="w-5 h-5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            <h3 class="text-lg font-semibold text-secondary-800">Mes vendeurs préférés</h3>
+          </div>
+          <div class="space-y-3">
             @for (category of productStats.topCategories; track category.category) {
-              <div class="category-item">
-                <div class="category-info">
-                  <mat-icon>store</mat-icon>
-                  <span class="category-name">{{ category.category }}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface-50 rounded-xl gap-3">
+                <div class="flex items-center gap-3">
+                  <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                  <span class="font-medium text-secondary-800">{{ category.category }}</span>
                 </div>
-                <div class="category-stats">
-                  <span class="order-count">{{ category.orderCount }} commandes</span>
-                  <span class="item-count">{{ category.itemCount }} articles</span>
-                  <span class="total-spent">{{ formatCurrency(category.totalSpent) }}</span>
+                <div class="flex items-center gap-4 text-sm">
+                  <span class="text-secondary-500">{{ category.orderCount }} commandes</span>
+                  <span class="text-secondary-500">{{ category.itemCount }} articles</span>
+                  <span class="font-semibold text-success-600">{{ formatCurrency(category.totalSpent) }}</span>
                 </div>
               </div>
             }
           </div>
-        </mat-card-content>
-      </mat-card>
-    }
+        </div>
+      }
 
-    <!-- Quick Actions Card -->
-    <mat-card class="actions-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>flash_on</mat-icon>
-          Actions rapides
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="actions-grid">
-          <button mat-raised-button color="primary" (click)="goToOrders()">
-            <mat-icon>list_alt</mat-icon>
+      <!-- Quick Actions Card -->
+      <div class="bg-white rounded-xl shadow-card p-6">
+        <div class="flex items-center gap-2 mb-5">
+          <svg class="w-5 h-5 text-warning-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <h3 class="text-lg font-semibold text-secondary-800">Actions rapides</h3>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2" (click)="goToOrders()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             Mes Commandes
           </button>
-          <button mat-raised-button (click)="goToProducts()">
-            <mat-icon>store</mat-icon>
+          <button class="px-5 py-2.5 border border-secondary-200 hover:bg-surface-100 text-secondary-700 font-medium rounded-lg transition-colors flex items-center gap-2" (click)="goToProducts()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
             Catalogue
           </button>
-          <button mat-raised-button (click)="goToCart()">
-            <mat-icon>shopping_cart</mat-icon>
+          <button class="px-5 py-2.5 border border-secondary-200 hover:bg-surface-100 text-secondary-700 font-medium rounded-lg transition-colors flex items-center gap-2" (click)="goToCart()">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
             Mon Panier
             @if (cartCount > 0) {
-              <span class="cart-badge">({{ cartCount }})</span>
+              <span class="font-bold">({{ cartCount }})</span>
             }
           </button>
           @if (user.role === 'SELLER') {
-            <button mat-raised-button color="accent" (click)="goToDashboard()">
-              <mat-icon>dashboard</mat-icon>
+            <button class="px-5 py-2.5 bg-accent-600 hover:bg-accent-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2" (click)="goToDashboard()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
               Dashboard Vendeur
             </button>
-            <button mat-raised-button color="warn" (click)="goToSellerOrders()">
-              <mat-icon>local_shipping</mat-icon>
+            <button class="px-5 py-2.5 bg-warning-500 hover:bg-warning-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2" (click)="goToSellerOrders()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
               Commandes Vendeur
             </button>
           }
         </div>
-      </mat-card-content>
-    </mat-card>
-  }
+      </div>
+    }
+  </div>
 </div>

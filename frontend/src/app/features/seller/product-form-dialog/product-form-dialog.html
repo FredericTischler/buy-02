@@ -1,165 +1,143 @@
-<h2 mat-dialog-title>
+<h2 mat-dialog-title class="text-xl font-semibold text-secondary-800 pb-2">
   {{ data.mode === 'edit' ? 'Modifier le produit' : 'Nouveau produit' }}
 </h2>
 
-<mat-dialog-content>
-  <form [formGroup]="productForm">
-    <!-- Name Field -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Nom du produit</mat-label>
-      <input matInput formControlName="name" placeholder="Ex: iPhone 15 Pro">
-      @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
-        <mat-error>{{ getErrorMessage('name') }}</mat-error>
-      }
-    </mat-form-field>
-
-    <!-- Description Field -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description</mat-label>
-      <textarea 
-        matInput 
-        formControlName="description" 
-        rows="4"
-        placeholder="Décrivez votre produit..."></textarea>
-      @if (productForm.get('description')?.invalid && productForm.get('description')?.touched) {
-        <mat-error>{{ getErrorMessage('description') }}</mat-error>
-      }
-    </mat-form-field>
-
-    <!-- Price and Stock Row -->
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Prix (€)</mat-label>
-        <input matInput type="number" formControlName="price" step="0.01" placeholder="1299.99">
-        <span matTextPrefix>€&nbsp;</span>
-        @if (productForm.get('price')?.invalid && productForm.get('price')?.touched) {
-          <mat-error>{{ getErrorMessage('price') }}</mat-error>
+<mat-dialog-content class="!p-0">
+  <div class="px-6 py-4">
+    <form [formGroup]="productForm" class="space-y-4">
+      <!-- Name Field -->
+      <div>
+        <label class="block text-sm font-medium text-secondary-700 mb-1.5">Nom du produit</label>
+        <input formControlName="name" placeholder="Ex: iPhone 15 Pro"
+          class="w-full px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+        @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
+          <p class="text-error-600 text-xs mt-1">{{ getErrorMessage('name') }}</p>
         }
-      </mat-form-field>
+      </div>
 
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Stock</mat-label>
-        <input matInput type="number" formControlName="stock" placeholder="50">
-        @if (productForm.get('stock')?.invalid && productForm.get('stock')?.touched) {
-          <mat-error>{{ getErrorMessage('stock') }}</mat-error>
+      <!-- Description Field -->
+      <div>
+        <label class="block text-sm font-medium text-secondary-700 mb-1.5">Description</label>
+        <textarea formControlName="description" rows="4" placeholder="Décrivez votre produit..."
+          class="w-full px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all resize-none"></textarea>
+        @if (productForm.get('description')?.invalid && productForm.get('description')?.touched) {
+          <p class="text-error-600 text-xs mt-1">{{ getErrorMessage('description') }}</p>
         }
-      </mat-form-field>
-    </div>
+      </div>
 
-    <!-- Category Field -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Catégorie</mat-label>
-      <mat-select formControlName="category">
-        @for (category of categories; track category) {
-          <mat-option [value]="category">{{ category }}</mat-option>
-        }
-      </mat-select>
-      @if (productForm.get('category')?.invalid && productForm.get('category')?.touched) {
-        <mat-error>{{ getErrorMessage('category') }}</mat-error>
-      }
-    </mat-form-field>
-
-    <!-- Image Upload Section -->
-    <div class="image-upload-section">
-      <label class="upload-label" for="product-images-input">Images du produit</label>
-      
-      <!-- Existing Images (in edit mode) -->
-      @if (existingImages.length > 0) {
-        <div class="existing-images">
-          <p class="section-title">Images actuelles :</p>
-          <div class="image-previews">
-            @for (image of existingImages; track image.id; let i = $index) {
-              <div class="preview-item">
-                <img [src]="image.url" [alt]="'Vue enregistrée ' + (i + 1)">
-                <button 
-                  type="button"
-                  mat-icon-button 
-                  color="warn"
-                  class="remove-btn"
-                  (click)="removeExistingImage(image.id, i)"
-                  [disabled]="loading">
-                  <mat-icon>close</mat-icon>
-                </button>
-              </div>
-            }
-          </div>
+      <!-- Price and Stock Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-secondary-700 mb-1.5">Prix (€)</label>
+          <input type="number" formControlName="price" step="0.01" placeholder="1299.99"
+            class="w-full px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+          @if (productForm.get('price')?.invalid && productForm.get('price')?.touched) {
+            <p class="text-error-600 text-xs mt-1">{{ getErrorMessage('price') }}</p>
+          }
         </div>
-      }
-      
-      <input 
-        id="product-images-input"
-        type="file" 
-        #fileInput
-        (change)="onFileSelected($event)"
-        accept="image/*"
-        multiple
-        style="display: none">
-      
-      <button 
-        type="button"
-        mat-stroked-button 
-        color="primary"
-        (click)="fileInput.click()"
-        [disabled]="loading">
-        <mat-icon>add_photo_alternate</mat-icon>
-        Ajouter des images
-      </button>
+        <div>
+          <label class="block text-sm font-medium text-secondary-700 mb-1.5">Stock</label>
+          <input type="number" formControlName="stock" placeholder="50"
+            class="w-full px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+          @if (productForm.get('stock')?.invalid && productForm.get('stock')?.touched) {
+            <p class="text-error-600 text-xs mt-1">{{ getErrorMessage('stock') }}</p>
+          }
+        </div>
+      </div>
 
-      <!-- New Image Previews -->
-      @if (imagePreviews.length > 0) {
-        <div class="new-images">
-          <p class="section-title">Nouvelles images :</p>
-          <div class="image-previews">
-            @for (preview of imagePreviews; track preview; let i = $index) {
-              <div class="preview-item">
-                <img [src]="preview" [alt]="'Prévisualisation ' + (i + 1)">
-                <button 
-                  type="button"
-                  mat-icon-button 
-                  color="warn"
-                  class="remove-btn"
-                  (click)="removeImage(i)"
-                  [disabled]="loading">
-                  <mat-icon>close</mat-icon>
-                </button>
-              </div>
-            }
+      <!-- Category Field -->
+      <div>
+        <label class="block text-sm font-medium text-secondary-700 mb-1.5">Catégorie</label>
+        <select formControlName="category"
+          class="w-full px-4 py-2.5 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+          <option value="" disabled>Sélectionner une catégorie</option>
+          @for (category of categories; track category) {
+            <option [value]="category">{{ category }}</option>
+          }
+        </select>
+        @if (productForm.get('category')?.invalid && productForm.get('category')?.touched) {
+          <p class="text-error-600 text-xs mt-1">{{ getErrorMessage('category') }}</p>
+        }
+      </div>
+
+      <!-- Image Upload Section -->
+      <div class="pt-2">
+        <label class="block text-sm font-medium text-secondary-700 mb-3">Images du produit</label>
+
+        <!-- Existing Images -->
+        @if (existingImages.length > 0) {
+          <div class="mb-4 p-3 bg-surface-50 rounded-lg">
+            <p class="text-xs font-medium text-secondary-500 mb-2">Images actuelles :</p>
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-3">
+              @for (image of existingImages; track image.id; let i = $index) {
+                <div class="relative aspect-square rounded-lg overflow-hidden border-2 border-secondary-200">
+                  <img [src]="image.url" [alt]="'Vue ' + (i + 1)" class="w-full h-full object-cover">
+                  <button type="button" class="absolute top-1 right-1 p-1 bg-white/90 rounded-full hover:bg-error-50 transition-colors"
+                    (click)="removeExistingImage(image.id, i)" [disabled]="loading">
+                    <svg class="w-3.5 h-3.5 text-error-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
           </div>
+        }
+
+        <input id="product-images-input" type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" multiple class="hidden">
+
+        <button type="button" class="px-4 py-2 border border-primary-300 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+          (click)="fileInput.click()" [disabled]="loading">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Ajouter des images
+        </button>
+
+        <!-- New Image Previews -->
+        @if (imagePreviews.length > 0) {
+          <div class="mt-4">
+            <p class="text-xs font-medium text-secondary-500 mb-2">Nouvelles images :</p>
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-3">
+              @for (preview of imagePreviews; track preview; let i = $index) {
+                <div class="relative aspect-square rounded-lg overflow-hidden border-2 border-secondary-200">
+                  <img [src]="preview" [alt]="'Prévisualisation ' + (i + 1)" class="w-full h-full object-cover">
+                  <button type="button" class="absolute top-1 right-1 p-1 bg-white/90 rounded-full hover:bg-error-50 transition-colors"
+                    (click)="removeImage(i)" [disabled]="loading">
+                    <svg class="w-3.5 h-3.5 text-error-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <p class="text-xs text-secondary-400 mt-2">Max 2MB par image. Formats acceptés: JPG, PNG, GIF</p>
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="flex items-center gap-2 p-3 bg-error-50 text-error-700 rounded-lg text-sm">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>{{ errorMessage }}</span>
         </div>
       }
 
-      <p class="hint">Max 2MB par image. Formats acceptés: JPG, PNG, GIF</p>
-    </div>
-
-    <!-- Error Message -->
-    @if (errorMessage) {
-      <div class="error-message">
-        <mat-icon>error</mat-icon>
-        <span>{{ errorMessage }}</span>
-      </div>
-    }
-
-    <!-- Upload Progress -->
-    @if (loading && totalImages > 0) {
-      <div class="upload-progress">
-        <p>Upload des images: {{ uploadProgress }} / {{ totalImages }}</p>
-        <mat-spinner diameter="30"></mat-spinner>
-      </div>
-    }
-  </form>
+      <!-- Upload Progress -->
+      @if (loading && totalImages > 0) {
+        <div class="flex items-center gap-3 p-3 bg-primary-50 rounded-lg">
+          <div class="w-5 h-5 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+          <p class="text-primary-700 text-sm font-medium">Upload des images: {{ uploadProgress }} / {{ totalImages }}</p>
+        </div>
+      }
+    </form>
+  </div>
 </mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()" [disabled]="loading">
+<mat-dialog-actions align="end" class="!px-6 !py-4 border-t border-secondary-100">
+  <button class="px-5 py-2.5 text-secondary-600 hover:bg-surface-100 font-medium rounded-lg transition-colors" (click)="onCancel()" [disabled]="loading">
     Annuler
   </button>
-  <button 
-    mat-raised-button 
-    color="primary" 
-    (click)="onSubmit()"
-    [disabled]="productForm.invalid || loading">
+  <button class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 ml-3"
+    (click)="onSubmit()" [disabled]="productForm.invalid || loading">
     @if (loading && totalImages === 0) {
-      <mat-spinner diameter="20"></mat-spinner>
+      <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
     } @else {
       {{ data.mode === 'edit' ? 'Enregistrer' : 'Créer' }}
     }

@@ -2,38 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { OrderService } from '../../../core/services/order';
-import { Cart } from '../../../core/services/cart';
 import { Order, OrderStatus } from '../../../core/models/order.model';
+import { PageHeader } from '../../../shared/page-header/page-header';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatDividerModule,
     MatSnackBarModule,
-    MatStepperModule,
-    MatToolbarModule,
-    MatBadgeModule,
-    MatTooltipModule
+    PageHeader
   ],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss'
@@ -41,14 +22,13 @@ import { Order, OrderStatus } from '../../../core/models/order.model';
 export class OrderDetail implements OnInit {
   order: Order | null = null;
   isLoading = true;
-  cartCount = 0;
 
   statusSteps = [
-    { status: OrderStatus.PENDING, label: 'En attente', icon: 'hourglass_empty' },
-    { status: OrderStatus.CONFIRMED, label: 'Confirmée', icon: 'check_circle' },
-    { status: OrderStatus.PROCESSING, label: 'En préparation', icon: 'inventory_2' },
-    { status: OrderStatus.SHIPPED, label: 'Expédiée', icon: 'local_shipping' },
-    { status: OrderStatus.DELIVERED, label: 'Livrée', icon: 'done_all' }
+    { status: OrderStatus.PENDING, label: 'En attente', icon: 'hourglass' },
+    { status: OrderStatus.CONFIRMED, label: 'Confirmée', icon: 'check' },
+    { status: OrderStatus.PROCESSING, label: 'En préparation', icon: 'box' },
+    { status: OrderStatus.SHIPPED, label: 'Expédiée', icon: 'truck' },
+    { status: OrderStatus.DELIVERED, label: 'Livrée', icon: 'done' }
   ];
 
   constructor(
@@ -56,7 +36,6 @@ export class OrderDetail implements OnInit {
     private readonly router: Router,
     private readonly location: Location,
     private readonly orderService: OrderService,
-    private readonly cartService: Cart,
     private readonly snackBar: MatSnackBar
   ) {}
 
@@ -65,26 +44,6 @@ export class OrderDetail implements OnInit {
     if (orderId) {
       this.loadOrder(orderId);
     }
-    this.updateCartCount();
-    this.cartService.cartItems$.subscribe(() => {
-      this.updateCartCount();
-    });
-  }
-
-  updateCartCount(): void {
-    this.cartCount = this.cartService.getCartCount();
-  }
-
-  goToProducts(): void {
-    this.router.navigate(['/products']);
-  }
-
-  goToCart(): void {
-    this.router.navigate(['/cart']);
-  }
-
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
   }
 
   loadOrder(orderId: string): void {
@@ -141,6 +100,19 @@ export class OrderDetail implements OnInit {
 
   getStatusColor(status: OrderStatus): string {
     return this.orderService.getStatusColor(status);
+  }
+
+  getStatusBadgeClass(status: OrderStatus): string {
+    const classMap: Record<string, string> = {
+      'PENDING': 'bg-warning-50 text-warning-700',
+      'CONFIRMED': 'bg-primary-50 text-primary-700',
+      'PROCESSING': 'bg-accent-50 text-accent-700',
+      'SHIPPED': 'bg-primary-50 text-primary-700',
+      'DELIVERED': 'bg-success-50 text-success-700',
+      'CANCELLED': 'bg-error-50 text-error-700',
+      'REFUNDED': 'bg-secondary-100 text-secondary-700'
+    };
+    return classMap[status] || 'bg-secondary-100 text-secondary-700';
   }
 
   canCancel(): boolean {

@@ -1,15 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Product } from '../../../core/services/product';
 import { Auth } from '../../../core/services/auth';
 import { OrderService } from '../../../core/services/order';
@@ -23,22 +16,14 @@ import { resolveApiBase } from '../../../core/utils/api-host';
   selector: 'app-dashboard',
   imports: [
     CommonModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatTableModule,
-    MatProgressSpinnerModule,
     MatDialogModule,
-    MatSnackBarModule,
-    MatTooltipModule
+    MatSnackBarModule
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
   products: ProductModel[] = [];
-  displayedColumns: string[] = ['name', 'category', 'price', 'stock', 'actions'];
   loading = false;
   errorMessage = '';
   currentUser: any = null;
@@ -124,7 +109,6 @@ export class Dashboard implements OnInit {
       next: (data) => {
         this.products = data;
         this.loading = false;
-        console.log('Mes produits:', data);
       },
       error: (error) => {
         console.error('Erreur de chargement:', error);

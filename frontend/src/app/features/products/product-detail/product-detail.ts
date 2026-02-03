@@ -1,11 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Product as ProductModel } from '../../../core/models/product.model';
 import { Product } from '../../../core/services/product';
@@ -19,16 +14,7 @@ import { catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatChipsModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    ProductReviews
-  ],
+  imports: [CommonModule, MatSnackBarModule, ProductReviews],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss'
 })
@@ -74,8 +60,6 @@ export class ProductDetail implements OnInit {
         this.product = result.product;
         this.images = result.media.map(m => this.mediaService.getImageUrl(m.url));
         this.loading = false;
-        console.log('Produit chargé:', this.product);
-        console.log('Images:', this.images);
       },
       error: (error) => {
         console.error('Erreur chargement produit:', error);
@@ -115,11 +99,8 @@ export class ProductDetail implements OnInit {
 
   addToCart(): void {
     const product = this.product;
-    if (!product) {
-      return;
-    }
+    if (!product) return;
 
-    // Vérifier si le panier + la quantité actuelle ne dépasse pas le stock
     const currentCart = this.cartService.getCartItems();
     const existingItem = currentCart.find(item => item.productId === product.id);
     const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
@@ -127,21 +108,15 @@ export class ProductDetail implements OnInit {
     if (currentQuantityInCart + this.quantity > product.stock) {
       const remaining = product.stock - currentQuantityInCart;
       this.snackBar.open(
-        remaining > 0 
-          ? `Stock insuffisant ! Seulement ${remaining} disponible(s) en plus` 
+        remaining > 0
+          ? `Stock insuffisant ! Seulement ${remaining} disponible(s) en plus`
           : `Stock maximum déjà atteint (${product.stock} en stock)`,
         'Fermer',
-        {
-          duration: 4000,
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-          panelClass: ['error-snackbar']
-        }
+        { duration: 4000, panelClass: ['error-snackbar'] }
       );
       return;
     }
 
-    // Utiliser le service Cart
     this.cartService.addToCart({
       productId: product.id,
       name: product.name,
@@ -153,17 +128,12 @@ export class ProductDetail implements OnInit {
       sellerName: product.sellerName
     });
 
-    // Notification
     this.snackBar.open(`${this.quantity} x ${product.name} ajouté au panier`, 'Voir le panier', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['success-snackbar']
+      duration: 3000, panelClass: ['success-snackbar']
     }).onAction().subscribe(() => {
       this.router.navigate(['/cart']);
     });
 
-    // Reset quantity
     this.quantity = 1;
   }
 
@@ -178,11 +148,11 @@ export class ProductDetail implements OnInit {
     return 'En stock';
   }
 
-  get stockStatusClass(): string {
+  get stockColorClass(): string {
     if (!this.product) return '';
-    if (this.product.stock === 0) return 'out-of-stock';
-    if (this.product.stock < 10) return 'low-stock';
-    return 'in-stock';
+    if (this.product.stock === 0) return 'bg-error-50 text-error-700';
+    if (this.product.stock < 10) return 'bg-warning-50 text-warning-700';
+    return 'bg-success-50 text-success-700';
   }
 
   isInWishlist(): boolean {
@@ -195,16 +165,11 @@ export class ProductDetail implements OnInit {
     this.wishlistService.toggleWishlist(this.product.id).subscribe({
       next: () => {
         const action = this.isInWishlist() ? 'ajouté à' : 'retiré de';
-        this.snackBar.open(`${this.product!.name} ${action} la wishlist`, 'Fermer', {
-          duration: 2000,
-          horizontalPosition: 'center',
-          verticalPosition: 'bottom'
-        });
+        this.snackBar.open(`${this.product!.name} ${action} la wishlist`, 'Fermer', { duration: 2000 });
       },
       error: () => {
         this.snackBar.open('Erreur lors de la mise à jour de la wishlist', 'Fermer', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
+          duration: 3000, panelClass: ['error-snackbar']
         });
       }
     });
