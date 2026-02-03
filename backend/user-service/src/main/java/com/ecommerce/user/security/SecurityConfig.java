@@ -112,6 +112,11 @@ public class SecurityConfig {
                 .referrerPolicy(referrer -> referrer.policy(
                     org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN
                 ))
+                // HSTS
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)
+                )
             )
 
             // AUTORISATION DES ROUTES
@@ -185,7 +190,7 @@ public class SecurityConfig {
     
     private List<String> parseAllowedOrigins() {
         if (allowedOriginsProperty == null || allowedOriginsProperty.isBlank()) {
-            return Collections.singletonList("*");
+            return Arrays.asList("http://localhost:4200", "https://localhost:4200", "http://localhost:8084");
         }
         return Arrays.stream(allowedOriginsProperty.split(","))
                 .map(String::trim)

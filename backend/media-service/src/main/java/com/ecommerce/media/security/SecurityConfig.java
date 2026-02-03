@@ -47,7 +47,17 @@ public class SecurityConfig {
             
             // CORS : Activé
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            
+
+            // SECURITY HEADERS
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.deny())
+                .contentTypeOptions(contentType -> {})
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)
+                )
+            )
+
             // AUTORISATION DES ROUTES
             .authorizeHttpRequests(auth -> auth
                 // ROUTES PUBLIQUES
@@ -107,7 +117,7 @@ public class SecurityConfig {
     
     private List<String> parseAllowedOrigins() {
         if (allowedOriginsProperty == null || allowedOriginsProperty.isBlank()) {
-            return Collections.singletonList("*");
+            return Arrays.asList("http://localhost:4200", "https://localhost:4200", "http://localhost:8084");
         }
         return Arrays.stream(allowedOriginsProperty.split(","))
                 .map(String::trim)
