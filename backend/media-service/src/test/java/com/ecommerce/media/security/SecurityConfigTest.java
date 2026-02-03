@@ -49,12 +49,12 @@ class SecurityConfigTest {
     }
 
     @Test
-    void corsConfigurationSource_shouldFallbackToWildcard() {
+    void corsConfigurationSource_shouldFallbackToDefaultOrigins() {
         ReflectionTestUtils.setField(securityConfig, "allowedOriginsProperty", "  ");
 
         CorsConfiguration configuration = resolveCorsConfiguration();
 
-        assertThat(configuration.getAllowedOriginPatterns()).containsExactly("*");
+        assertThat(configuration.getAllowedOrigins()).contains("http://localhost:4200", "https://localhost:4200", "http://localhost:8084");
         assertThat(configuration.getAllowedHeaders()).contains("Authorization", "Content-Type", "Accept");
     }
 

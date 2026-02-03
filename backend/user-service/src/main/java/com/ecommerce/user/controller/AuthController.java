@@ -3,7 +3,9 @@ package com.ecommerce.user.controller;
 import com.ecommerce.user.dto.AuthResponse;
 import com.ecommerce.user.dto.LoginRequest;
 import com.ecommerce.user.dto.RegisterRequest;
+import com.ecommerce.user.service.LoginRateLimiterService;
 import com.ecommerce.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,9 @@ public class AuthController {
     
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LoginRateLimiterService rateLimiter;
     
     /**
      * API : INSCRIPTION
@@ -103,18 +108,35 @@ public class AuthController {
      * Header: Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        String key = request.getEmail() + "|" + getClientIp(httpRequest);
+
+        if (rateLimiter.isBlocked(key)) {
+            long remaining = rateLimiter.getRemainingBlockSeconds(key);
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Trop de tentatives de connexion. Réessayez dans " + remaining + " secondes.");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(error);
+        }
+
         try {
             AuthResponse response = userService.login(request);
-            
+            rateLimiter.resetAttempts(key);
             return ResponseEntity.ok(response);
-            
+
         } catch (RuntimeException e) {
+            rateLimiter.recordFailedAttempt(key);
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
-            
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
     
     /**

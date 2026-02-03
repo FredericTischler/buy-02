@@ -5,6 +5,7 @@ import com.ecommerce.user.dto.LoginRequest;
 import com.ecommerce.user.dto.RegisterRequest;
 import com.ecommerce.user.model.Role;
 import com.ecommerce.user.security.JwtAuthenticationFilter;
+import com.ecommerce.user.service.LoginRateLimiterService;
 import com.ecommerce.user.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,9 @@ class AuthControllerTest {
 
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockBean
+    private LoginRateLimiterService rateLimiter;
 
     @org.springframework.boot.test.context.TestConfiguration
     static class TestMongoConfig {
