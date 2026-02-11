@@ -48,10 +48,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserService();
-        ReflectionTestUtils.setField(userService, "userRepository", userRepository);
-        ReflectionTestUtils.setField(userService, "passwordEncoder", passwordEncoder);
-        ReflectionTestUtils.setField(userService, "jwtUtil", jwtUtil);
+        userService = new UserService(userRepository, passwordEncoder, jwtUtil);
         ReflectionTestUtils.setField(userService, "avatarDir", tempDir.toString());
     }
 
@@ -280,5 +277,162 @@ class UserServiceTest {
 
         assertThat(result).contains(user);
         verify(userRepository).findById("id");
+    }
+
+    // ==================== WISHLIST TESTS ====================
+
+    @Test
+    void getWishlist_shouldReturnEmptyListWhenWishlistIsNull() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(null);
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.getWishlist("alice@mail.com");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getWishlist_shouldReturnWishlistItems() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(java.util.Arrays.asList("product-1", "product-2"));
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.getWishlist("alice@mail.com");
+
+        assertThat(result).containsExactly("product-1", "product-2");
+    }
+
+    @Test
+    void getWishlist_shouldThrowWhenUserNotFound() {
+        when(userRepository.findByEmail("ghost@mail.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.getWishlist("ghost@mail.com"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Utilisateur non trouvé");
+    }
+
+    @Test
+    void addToWishlist_shouldAddProductToWishlist() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(new java.util.ArrayList<>());
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.addToWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).contains("product-1");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void addToWishlist_shouldNotAddDuplicateProduct() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(new java.util.ArrayList<>(java.util.Arrays.asList("product-1")));
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.addToWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).hasSize(1)
+            .containsExactly("product-1");
+    }
+
+    @Test
+    void addToWishlist_shouldInitializeWishlistIfNull() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(null);
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.addToWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).contains("product-1");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void removeFromWishlist_shouldRemoveProductFromWishlist() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(new java.util.ArrayList<>(java.util.Arrays.asList("product-1", "product-2")));
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.removeFromWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).containsExactly("product-2");
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void removeFromWishlist_shouldHandleNullWishlist() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(null);
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        var result = userService.removeFromWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void isInWishlist_shouldReturnTrueWhenProductExists() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(java.util.Arrays.asList("product-1", "product-2"));
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        boolean result = userService.isInWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void isInWishlist_shouldReturnFalseWhenProductNotExists() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(java.util.Arrays.asList("product-1"));
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        boolean result = userService.isInWishlist("alice@mail.com", "product-999");
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void isInWishlist_shouldReturnFalseWhenWishlistIsNull() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(null);
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        boolean result = userService.isInWishlist("alice@mail.com", "product-1");
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void clearWishlist_shouldEmptyWishlist() {
+        User user = new User();
+        user.setEmail("alice@mail.com");
+        user.setWishlist(new java.util.ArrayList<>(java.util.Arrays.asList("product-1", "product-2")));
+        when(userRepository.findByEmail("alice@mail.com")).thenReturn(Optional.of(user));
+
+        userService.clearWishlist("alice@mail.com");
+
+        assertThat(user.getWishlist()).isEmpty();
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void clearWishlist_shouldThrowWhenUserNotFound() {
+        when(userRepository.findByEmail("ghost@mail.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.clearWishlist("ghost@mail.com"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Utilisateur non trouvé");
     }
 }

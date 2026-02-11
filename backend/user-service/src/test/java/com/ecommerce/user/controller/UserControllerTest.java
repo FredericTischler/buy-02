@@ -23,10 +23,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -166,5 +170,115 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users/id"))
             .andExpect(status().isInternalServerError())
             .andExpect(jsonPath("$.error").value("boom"));
+    }
+
+    // ==================== WISHLIST CONTROLLER TESTS ====================
+
+    @Test
+    void getWishlist_shouldReturnWishlist() throws Exception {
+        List<String> wishlist = Arrays.asList("product-1", "product-2");
+        when(userService.getWishlist("alice@mail.com")).thenReturn(wishlist);
+
+        mockMvc.perform(get("/api/users/wishlist"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0]").value("product-1"))
+            .andExpect(jsonPath("$[1]").value("product-2"));
+    }
+
+    @Test
+    void getWishlist_shouldReturnBadRequestWhenServiceThrows() throws Exception {
+        when(userService.getWishlist("alice@mail.com")).thenThrow(new RuntimeException("User not found"));
+
+        mockMvc.perform(get("/api/users/wishlist"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("User not found"));
+    }
+
+    @Test
+    void addToWishlist_shouldReturnUpdatedWishlist() throws Exception {
+        List<String> wishlist = Arrays.asList("product-1", "product-2");
+        when(userService.addToWishlist("alice@mail.com", "product-2")).thenReturn(wishlist);
+
+        mockMvc.perform(post("/api/users/wishlist/product-2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Produit ajouté à la wishlist"))
+            .andExpect(jsonPath("$.wishlist[0]").value("product-1"));
+    }
+
+    @Test
+    void addToWishlist_shouldReturnBadRequestWhenServiceThrows() throws Exception {
+        when(userService.addToWishlist("alice@mail.com", "product-1"))
+            .thenThrow(new RuntimeException("Product already in wishlist"));
+
+        mockMvc.perform(post("/api/users/wishlist/product-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Product already in wishlist"));
+    }
+
+    @Test
+    void removeFromWishlist_shouldReturnUpdatedWishlist() throws Exception {
+        List<String> wishlist = Arrays.asList("product-2");
+        when(userService.removeFromWishlist("alice@mail.com", "product-1")).thenReturn(wishlist);
+
+        mockMvc.perform(delete("/api/users/wishlist/product-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Produit retiré de la wishlist"))
+            .andExpect(jsonPath("$.wishlist[0]").value("product-2"));
+    }
+
+    @Test
+    void removeFromWishlist_shouldReturnBadRequestWhenServiceThrows() throws Exception {
+        when(userService.removeFromWishlist("alice@mail.com", "product-1"))
+            .thenThrow(new RuntimeException("Product not in wishlist"));
+
+        mockMvc.perform(delete("/api/users/wishlist/product-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Product not in wishlist"));
+    }
+
+    @Test
+    void checkWishlist_shouldReturnTrueWhenProductInWishlist() throws Exception {
+        when(userService.isInWishlist("alice@mail.com", "product-1")).thenReturn(true);
+
+        mockMvc.perform(get("/api/users/wishlist/check/product-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.inWishlist").value(true));
+    }
+
+    @Test
+    void checkWishlist_shouldReturnFalseWhenProductNotInWishlist() throws Exception {
+        when(userService.isInWishlist("alice@mail.com", "product-1")).thenReturn(false);
+
+        mockMvc.perform(get("/api/users/wishlist/check/product-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.inWishlist").value(false));
+    }
+
+    @Test
+    void checkWishlist_shouldReturnBadRequestWhenServiceThrows() throws Exception {
+        when(userService.isInWishlist("alice@mail.com", "product-1"))
+            .thenThrow(new RuntimeException("User not found"));
+
+        mockMvc.perform(get("/api/users/wishlist/check/product-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("User not found"));
+    }
+
+    @Test
+    void clearWishlist_shouldReturnSuccessMessage() throws Exception {
+        doNothing().when(userService).clearWishlist("alice@mail.com");
+
+        mockMvc.perform(delete("/api/users/wishlist"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Wishlist vidée"));
+    }
+
+    @Test
+    void clearWishlist_shouldReturnBadRequestWhenServiceThrows() throws Exception {
+        doThrow(new RuntimeException("User not found")).when(userService).clearWishlist("alice@mail.com");
+
+        mockMvc.perform(delete("/api/users/wishlist"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("User not found"));
     }
 }

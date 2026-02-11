@@ -24,9 +24,8 @@ class SecurityConfigTest {
 
     @BeforeEach
     void setUp() {
-        securityConfig = new SecurityConfig();
         jwtAuthenticationFilter = new JwtAuthenticationFilter();
-        ReflectionTestUtils.setField(securityConfig, "jwtAuthenticationFilter", jwtAuthenticationFilter);
+        securityConfig = new SecurityConfig(jwtAuthenticationFilter);
     }
 
     @Test

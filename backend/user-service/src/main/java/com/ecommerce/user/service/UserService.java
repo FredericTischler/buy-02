@@ -4,7 +4,7 @@ import com.ecommerce.user.dto.*;
 import com.ecommerce.user.model.User;
 import com.ecommerce.user.repository.UserRepository;
 import com.ecommerce.user.security.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,18 +34,16 @@ import java.util.UUID;
  * - Génération des tokens JWT
  */
 @Service
-@Transactional  // Gère automatiquement les transactions de la base de données
+@Transactional
+@RequiredArgsConstructor
 public class UserService {
-    
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;  // BCrypt
-    
-    @Autowired
-    private JwtUtil jwtUtil;
-    
+
+    private static final String USER_NOT_FOUND = "Utilisateur non trouvé";
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
     @Value("${upload.avatar-dir:./uploads/avatars}")
     private String avatarDir;
     
@@ -146,7 +144,7 @@ public class UserService {
         
         // Chercher l'utilisateur par email
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
         
         // Convertir User → UserResponse (sans le password !)
         return new UserResponse(
@@ -173,7 +171,7 @@ public class UserService {
         
         // Chercher l'utilisateur
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
         
         // Mettre à jour les champs
         if (name != null && !name.isEmpty()) {
@@ -238,7 +236,7 @@ public class UserService {
         
         // Chercher l'utilisateur
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
         
         try {
             // Créer le dossier s'il n'existe pas
@@ -301,7 +299,7 @@ public class UserService {
      */
     public List<String> getWishlist(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
 
         return user.getWishlist() != null ? user.getWishlist() : new ArrayList<>();
     }
@@ -315,7 +313,7 @@ public class UserService {
      */
     public List<String> addToWishlist(String email, String productId) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
 
         if (user.getWishlist() == null) {
             user.setWishlist(new ArrayList<>());
@@ -340,7 +338,7 @@ public class UserService {
      */
     public List<String> removeFromWishlist(String email, String productId) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
 
         if (user.getWishlist() != null) {
             user.getWishlist().remove(productId);
@@ -360,7 +358,7 @@ public class UserService {
      */
     public boolean isInWishlist(String email, String productId) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
 
         return user.getWishlist() != null && user.getWishlist().contains(productId);
     }
@@ -372,7 +370,7 @@ public class UserService {
      */
     public void clearWishlist(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
 
         user.setWishlist(new ArrayList<>());
         user.setUpdatedAt(LocalDateTime.now());

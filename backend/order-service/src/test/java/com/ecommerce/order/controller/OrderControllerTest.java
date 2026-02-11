@@ -517,6 +517,254 @@ class OrderControllerTest {
             .andExpect(jsonPath("$.error").value("User not authenticated"));
     }
 
+    // ==================== SEARCH MY ORDERS TESTS ====================
+
+    @Test
+    void searchMyOrders_shouldReturnFilteredOrders() throws Exception {
+        List<OrderResponse> orders = Collections.singletonList(
+                createSampleOrderResponse("order-1", "user-1"));
+
+        Mockito.when(orderService.searchOrdersByUser(eq("user-1"), any(OrderSearchParams.class)))
+                .thenReturn(orders);
+
+        mockMvc.perform(get("/api/orders/my-orders/search")
+                .param("keyword", "test")
+                .param("sortBy", "createdAt")
+                .param("sortDir", "desc")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void searchMyOrders_shouldReturnUnauthorizedWhenNoUserId() throws Exception {
+        mockMvc.perform(get("/api/orders/my-orders/search"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    void searchMyOrders_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.searchOrdersByUser(eq("user-1"), any(OrderSearchParams.class)))
+                .thenThrow(new RuntimeException("Search failed"));
+
+        mockMvc.perform(get("/api/orders/my-orders/search")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Search failed"));
+    }
+
+    // ==================== SEARCH SELLER ORDERS TESTS ====================
+
+    @Test
+    void searchSellerOrders_shouldReturnFilteredOrders() throws Exception {
+        List<OrderResponse> orders = Collections.singletonList(
+                createSampleOrderResponse("order-1", "user-1"));
+
+        Mockito.when(orderService.searchOrdersForSeller(eq("seller-1"), any(OrderSearchParams.class)))
+                .thenReturn(orders);
+
+        mockMvc.perform(get("/api/orders/seller/search")
+                .param("keyword", "test")
+                .param("sortBy", "createdAt")
+                .param("sortDir", "desc")
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void searchSellerOrders_shouldReturnUnauthorizedWhenNoUserId() throws Exception {
+        mockMvc.perform(get("/api/orders/seller/search"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    void searchSellerOrders_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.searchOrdersForSeller(eq("seller-1"), any(OrderSearchParams.class)))
+                .thenThrow(new RuntimeException("Search failed"));
+
+        mockMvc.perform(get("/api/orders/seller/search")
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Search failed"));
+    }
+
+    // ==================== USER PRODUCT STATS TESTS ====================
+
+    @Test
+    void getUserProductStats_shouldReturnStats() throws Exception {
+        UserProductStats stats = new UserProductStats();
+        stats.setMostPurchasedProducts(Collections.emptyList());
+        stats.setTopCategories(Collections.emptyList());
+        stats.setTotalUniqueProducts(5);
+        stats.setTotalItemsPurchased(20);
+
+        Mockito.when(orderService.getUserProductStats("user-1")).thenReturn(stats);
+
+        mockMvc.perform(get("/api/orders/stats/user/products")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalUniqueProducts").value(5))
+            .andExpect(jsonPath("$.totalItemsPurchased").value(20));
+    }
+
+    @Test
+    void getUserProductStats_shouldReturnUnauthorizedWhenNoUserId() throws Exception {
+        mockMvc.perform(get("/api/orders/stats/user/products"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    void getUserProductStats_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.getUserProductStats("user-1"))
+                .thenThrow(new RuntimeException("Stats error"));
+
+        mockMvc.perform(get("/api/orders/stats/user/products")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Stats error"));
+    }
+
+    // ==================== SELLER PRODUCT STATS TESTS ====================
+
+    @Test
+    void getSellerProductStats_shouldReturnStats() throws Exception {
+        SellerProductStats stats = new SellerProductStats();
+        stats.setBestSellingProducts(Collections.emptyList());
+        stats.setRecentSales(Collections.emptyList());
+        stats.setTotalUniqueProductsSold(10);
+        stats.setTotalCustomers(8);
+
+        Mockito.when(orderService.getSellerProductStats("seller-1")).thenReturn(stats);
+
+        mockMvc.perform(get("/api/orders/stats/seller/products")
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalUniqueProductsSold").value(10))
+            .andExpect(jsonPath("$.totalCustomers").value(8));
+    }
+
+    @Test
+    void getSellerProductStats_shouldReturnUnauthorizedWhenNoUserId() throws Exception {
+        mockMvc.perform(get("/api/orders/stats/seller/products"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    void getSellerProductStats_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.getSellerProductStats("seller-1"))
+                .thenThrow(new RuntimeException("Stats error"));
+
+        mockMvc.perform(get("/api/orders/stats/seller/products")
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Stats error"));
+    }
+
+    // ==================== DELETE ORDER TESTS ====================
+
+    @Test
+    void deleteOrder_shouldDeleteOrder() throws Exception {
+        Mockito.doNothing().when(orderService).deleteOrder("order-123", "user-1");
+
+        mockMvc.perform(delete("/api/orders/order-123")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.message").value("Order deleted successfully"));
+    }
+
+    @Test
+    void deleteOrder_shouldReturnUnauthorizedWhenNoUserId() throws Exception {
+        mockMvc.perform(delete("/api/orders/order-123"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error").value("User not authenticated"));
+    }
+
+    @Test
+    void deleteOrder_shouldReturnNotFoundWhenOrderMissing() throws Exception {
+        Mockito.doThrow(new RuntimeException("Order not found"))
+                .when(orderService).deleteOrder("order-123", "user-1");
+
+        mockMvc.perform(delete("/api/orders/order-123")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Order not found"));
+    }
+
+    @Test
+    void deleteOrder_shouldReturnForbiddenWhenNotAuthorized() throws Exception {
+        Mockito.doThrow(new RuntimeException("You are not authorized to delete this order"))
+                .when(orderService).deleteOrder("order-123", "other-user");
+
+        mockMvc.perform(delete("/api/orders/order-123")
+                .requestAttr("userId", "other-user"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error").value("You are not authorized to delete this order"));
+    }
+
+    @Test
+    void deleteOrder_shouldReturnBadRequestWhenOrderCannotBeDeleted() throws Exception {
+        Mockito.doThrow(new RuntimeException("Order cannot be deleted in current status"))
+                .when(orderService).deleteOrder("order-123", "user-1");
+
+        mockMvc.perform(delete("/api/orders/order-123")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Order cannot be deleted in current status"));
+    }
+
+    // ==================== ERROR HANDLING TESTS ====================
+
+    @Test
+    void getMyOrders_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.getOrdersByUser("user-1"))
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/api/orders/my-orders")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Database error"));
+    }
+
+    @Test
+    void getSellerOrders_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.getOrdersForSeller("seller-1"))
+                .thenThrow(new RuntimeException("Database error"));
+
+        mockMvc.perform(get("/api/orders/seller")
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Database error"));
+    }
+
+    @Test
+    void getUserStats_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.getUserStats("user-1"))
+                .thenThrow(new RuntimeException("Stats error"));
+
+        mockMvc.perform(get("/api/orders/stats/user")
+                .requestAttr("userId", "user-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Stats error"));
+    }
+
+    @Test
+    void getSellerStats_shouldHandleServiceError() throws Exception {
+        Mockito.when(orderService.getSellerStats("seller-1"))
+                .thenThrow(new RuntimeException("Stats error"));
+
+        mockMvc.perform(get("/api/orders/stats/seller")
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Stats error"));
+    }
+
     // ==================== HEALTH CHECK TEST ====================
 
     @Test

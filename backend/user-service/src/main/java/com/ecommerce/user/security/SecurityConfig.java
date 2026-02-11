@@ -1,6 +1,6 @@
 package com.ecommerce.user.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * SECURITY CONFIGURATION
@@ -34,12 +33,12 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // Permet d'utiliser @PreAuthorize dans les controllers
+@EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
-    
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Value("${app.cors.allowed-origins:*}")
     private String allowedOriginsProperty;
     
@@ -195,6 +194,6 @@ public class SecurityConfig {
         return Arrays.stream(allowedOriginsProperty.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
+                .toList();
     }
 }

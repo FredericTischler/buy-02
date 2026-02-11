@@ -39,11 +39,11 @@
         <sonar.coverage.exclusions>**/config/**,**/dto/**,**/entity/**,**/*Application.java</sonar.coverage.exclusions>
         <!-- Ignore all issues reported on test sources -->
         <sonar.issue.ignore.allfile>p1,p2,p3,p4,p5</sonar.issue.ignore.allfile>
-        <sonar.issue.ignore.allfile.p1.filePattern>**/src/test/**</sonar.issue.ignore.allfile.p1.filePattern>
-        <sonar.issue.ignore.allfile.p2.filePattern>**/*Test.java</sonar.issue.ignore.allfile.p2.filePattern>
-        <sonar.issue.ignore.allfile.p3.filePattern>**/*Tests.java</sonar.issue.ignore.allfile.p3.filePattern>
-        <sonar.issue.ignore.allfile.p4.filePattern>**/*IT.java</sonar.issue.ignore.allfile.p4.filePattern>
-        <sonar.issue.ignore.allfile.p5.filePattern>**/*ITCase.java</sonar.issue.ignore.allfile.p5.filePattern>
+        <sonar.issue.ignore.allfile.p1.fileRegexp>.*src/test/.*</sonar.issue.ignore.allfile.p1.fileRegexp>
+        <sonar.issue.ignore.allfile.p2.fileRegexp>.*Test\.java</sonar.issue.ignore.allfile.p2.fileRegexp>
+        <sonar.issue.ignore.allfile.p3.fileRegexp>.*Tests\.java</sonar.issue.ignore.allfile.p3.fileRegexp>
+        <sonar.issue.ignore.allfile.p4.fileRegexp>.*IT\.java</sonar.issue.ignore.allfile.p4.fileRegexp>
+        <sonar.issue.ignore.allfile.p5.fileRegexp>.*ITCase\.java</sonar.issue.ignore.allfile.p5.fileRegexp>
     </properties>
 
     <!-- DEPENDENCIES -->

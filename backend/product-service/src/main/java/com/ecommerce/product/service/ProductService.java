@@ -5,7 +5,7 @@ import com.ecommerce.product.dto.ProductRequest;
 import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.model.Product;
 import com.ecommerce.product.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * PRODUCT SERVICE
@@ -28,14 +27,12 @@ import java.util.stream.Collectors;
  * - Envoi d'événements Kafka
  */
 @Service
+@RequiredArgsConstructor
 public class ProductService {
-    
-    @Autowired
-    private ProductRepository productRepository;
-    
-    @Autowired
-    private KafkaTemplate<String, ProductEvent> kafkaTemplate;
-    
+
+    private final ProductRepository productRepository;
+    private final KafkaTemplate<String, ProductEvent> kafkaTemplate;
+
     @Value("${kafka.topic.product-events}")
     private String productEventsTopic;
     
@@ -74,7 +71,7 @@ public class ProductService {
         return productRepository.findAll()
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**
@@ -92,7 +89,7 @@ public class ProductService {
         return productRepository.findBySellerId(sellerId)
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**
@@ -102,7 +99,7 @@ public class ProductService {
         return productRepository.findByCategory(category)
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**
@@ -112,7 +109,7 @@ public class ProductService {
         return productRepository.findByNameContainingIgnoreCase(keyword)
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     /**
@@ -240,7 +237,7 @@ public class ProductService {
         return productRepository.findByStockGreaterThan(0)
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -250,7 +247,7 @@ public class ProductService {
         return productRepository.findByPriceBetween(minPrice, maxPrice)
                 .stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

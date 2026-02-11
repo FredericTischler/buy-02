@@ -3,7 +3,7 @@ package com.ecommerce.user.controller;
 import com.ecommerce.user.dto.UserResponse;
 import com.ecommerce.user.model.User;
 import com.ecommerce.user.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,30 +11,31 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * USER CONTROLLER
- * 
+ *
  * Gère les APIs du profil utilisateur :
  * - GET  /api/users/profile → Récupérer son profil
  * - PUT  /api/users/profile → Modifier son profil
- * 
- * ⚠️ Ces routes sont PROTÉGÉES : JWT token OBLIGATOIRE !
- * 
+ *
+ * Ces routes sont PROTEGEES : JWT token OBLIGATOIRE !
+ *
  * Le token doit être envoyé dans le header :
  * Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
  */
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class UserController {
-    
-    @Autowired
-    private UserService userService;
+
+    private static final String ERROR_KEY = "error";
+    private static final String MESSAGE_KEY = "message";
+
+    private final UserService userService;
     
     /**
      * RÉCUPÉRER L'EMAIL DE L'UTILISATEUR CONNECTÉ
@@ -75,13 +76,11 @@ public class UserController {
             return ResponseEntity.ok(profile);
             
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
-    
+
     /**
      * API : MODIFIER SON PROFIL
      * 
@@ -117,13 +116,11 @@ public class UserController {
             return ResponseEntity.ok(profile);
             
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
-    
+
     /**
      * API : UPLOAD AVATAR
      * 
@@ -142,17 +139,10 @@ public class UserController {
         try {
             String email = getCurrentUserEmail();
             String avatarUrl = userService.uploadAvatar(email, file);
-            
-            Map<String, String> response = new HashMap<>();
-            response.put("avatarUrl", avatarUrl);
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(Map.of("avatarUrl", avatarUrl));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
     
@@ -184,15 +174,12 @@ public class UserController {
                 );
                 return ResponseEntity.ok(response);
             } else {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Utilisateur non trouvé");
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of(ERROR_KEY, "Utilisateur non trouvé"));
             }
-
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -211,13 +198,10 @@ public class UserController {
         try {
             String email = getCurrentUserEmail();
             List<String> wishlist = userService.getWishlist(email);
-
             return ResponseEntity.ok(wishlist);
-
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -234,17 +218,10 @@ public class UserController {
         try {
             String email = getCurrentUserEmail();
             List<String> wishlist = userService.addToWishlist(email, productId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Produit ajouté à la wishlist");
-            response.put("wishlist", wishlist);
-
-            return ResponseEntity.ok(response);
-
+            return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Produit ajouté à la wishlist", "wishlist", wishlist));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -261,17 +238,10 @@ public class UserController {
         try {
             String email = getCurrentUserEmail();
             List<String> wishlist = userService.removeFromWishlist(email, productId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Produit retiré de la wishlist");
-            response.put("wishlist", wishlist);
-
-            return ResponseEntity.ok(response);
-
+            return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Produit retiré de la wishlist", "wishlist", wishlist));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -288,16 +258,10 @@ public class UserController {
         try {
             String email = getCurrentUserEmail();
             boolean inWishlist = userService.isInWishlist(email, productId);
-
-            Map<String, Boolean> response = new HashMap<>();
-            response.put("inWishlist", inWishlist);
-
-            return ResponseEntity.ok(response);
-
+            return ResponseEntity.ok(Map.of("inWishlist", inWishlist));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -314,16 +278,10 @@ public class UserController {
         try {
             String email = getCurrentUserEmail();
             userService.clearWishlist(email);
-
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Wishlist vidée");
-
-            return ResponseEntity.ok(response);
-
+            return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Wishlist vidée"));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 }

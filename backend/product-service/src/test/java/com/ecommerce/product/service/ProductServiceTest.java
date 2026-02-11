@@ -14,6 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -37,9 +41,7 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        productService = new ProductService();
-        ReflectionTestUtils.setField(productService, "productRepository", productRepository);
-        ReflectionTestUtils.setField(productService, "kafkaTemplate", kafkaTemplate);
+        productService = new ProductService(productRepository, kafkaTemplate);
         ReflectionTestUtils.setField(productService, "productEventsTopic", "product-events");
     }
 
@@ -210,5 +212,138 @@ class ProductServiceTest {
 
         assertThat(responses).hasSize(1);
         verify(productRepository).findByNameContainingIgnoreCase("phone");
+    }
+
+    // ==================== PAGINATION & ADVANCED SEARCH TESTS ====================
+
+    @Test
+    void getAllProductsPaginated_shouldReturnPagedResults() {
+        Product product = new Product();
+        product.setId("product-1");
+        product.setName("Test Product");
+        Page<Product> page = new PageImpl<>(List.of(product));
+        when(productRepository.findAll(any(Pageable.class))).thenReturn(page);
+
+        Page<ProductResponse> result = productService.getAllProductsPaginated(0, 10, "name", "asc");
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo("product-1");
+        verify(productRepository).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void getAllProductsPaginated_shouldSortDescending() {
+        Page<Product> page = new PageImpl<>(List.of());
+        when(productRepository.findAll(any(Pageable.class))).thenReturn(page);
+
+        productService.getAllProductsPaginated(0, 10, "price", "desc");
+
+        verify(productRepository).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void searchProductsAdvanced_shouldSearchWithKeyword() {
+        Product product = new Product();
+        product.setId("product-1");
+        Page<Product> page = new PageImpl<>(List.of(product));
+        when(productRepository.searchWithFilters(anyString(), anyDouble(), anyDouble(), anyInt(), any(Pageable.class)))
+            .thenReturn(page);
+
+        Page<ProductResponse> result = productService.searchProductsAdvanced(
+            "phone", null, 10.0, 1000.0, 1, 0, 10, "name", "asc");
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(productRepository).searchWithFilters(eq("phone"), eq(10.0), eq(1000.0), eq(1), any(Pageable.class));
+    }
+
+    @Test
+    void searchProductsAdvanced_shouldFilterByCategory() {
+        Product product = new Product();
+        product.setId("product-1");
+        product.setCategory("Electronics");
+        Page<Product> page = new PageImpl<>(List.of(product));
+        when(productRepository.findByCategoryWithFilters(anyString(), anyDouble(), anyDouble(), anyInt(), any(Pageable.class)))
+            .thenReturn(page);
+
+        Page<ProductResponse> result = productService.searchProductsAdvanced(
+            null, "Electronics", null, null, null, 0, 10, "name", "asc");
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(productRepository).findByCategoryWithFilters(eq("Electronics"), eq(0.0), eq(Double.MAX_VALUE), eq(0), any(Pageable.class));
+    }
+
+    @Test
+    void searchProductsAdvanced_shouldUseDefaultsForNullValues() {
+        Page<Product> page = new PageImpl<>(List.of());
+        when(productRepository.searchWithFilters(anyString(), anyDouble(), anyDouble(), anyInt(), any(Pageable.class)))
+            .thenReturn(page);
+
+        productService.searchProductsAdvanced(null, null, null, null, null, 0, 10, "name", "desc");
+
+        verify(productRepository).searchWithFilters(eq(".*"), eq(0.0), eq(Double.MAX_VALUE), eq(0), any(Pageable.class));
+    }
+
+    @Test
+    void searchProductsAdvanced_shouldHandleEmptyKeyword() {
+        Page<Product> page = new PageImpl<>(List.of());
+        when(productRepository.searchWithFilters(anyString(), anyDouble(), anyDouble(), anyInt(), any(Pageable.class)))
+            .thenReturn(page);
+
+        productService.searchProductsAdvanced("", null, null, null, null, 0, 10, "name", "asc");
+
+        verify(productRepository).searchWithFilters(eq(".*"), anyDouble(), anyDouble(), anyInt(), any(Pageable.class));
+    }
+
+    @Test
+    void getAvailableProducts_shouldReturnProductsWithStock() {
+        Product product = new Product();
+        product.setId("product-1");
+        product.setStock(10);
+        when(productRepository.findByStockGreaterThan(0)).thenReturn(List.of(product));
+
+        List<ProductResponse> result = productService.getAvailableProducts();
+
+        assertThat(result).hasSize(1);
+        verify(productRepository).findByStockGreaterThan(0);
+    }
+
+    @Test
+    void getAvailableProducts_shouldReturnEmptyListWhenNoStock() {
+        when(productRepository.findByStockGreaterThan(0)).thenReturn(List.of());
+
+        List<ProductResponse> result = productService.getAvailableProducts();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getProductsByPriceRange_shouldFilterByPrice() {
+        Product product = new Product();
+        product.setId("product-1");
+        product.setPrice(50.0);
+        when(productRepository.findByPriceBetween(10.0, 100.0)).thenReturn(List.of(product));
+
+        List<ProductResponse> result = productService.getProductsByPriceRange(10.0, 100.0);
+
+        assertThat(result).hasSize(1);
+        verify(productRepository).findByPriceBetween(10.0, 100.0);
+    }
+
+    @Test
+    void getProductsByPriceRange_shouldReturnEmptyListWhenNoMatch() {
+        when(productRepository.findByPriceBetween(1000.0, 2000.0)).thenReturn(List.of());
+
+        List<ProductResponse> result = productService.getProductsByPriceRange(1000.0, 2000.0);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void deleteProduct_shouldThrowWhenProductDoesNotExist() {
+        when(productRepository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.deleteProduct("missing", "seller"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Product not found");
     }
 }

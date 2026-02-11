@@ -5,28 +5,27 @@ import com.ecommerce.product.dto.ProductResponse;
 import com.ecommerce.product.service.ProductService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * PRODUCT CONTROLLER
- * 
+ *
  * REST API pour la gestion des produits.
- * 
+ *
  * Routes publiques :
  * - GET /api/products (liste tous les produits)
  * - GET /api/products/{id} (détails d'un produit)
  * - GET /api/products/search?keyword=xxx (recherche)
  * - GET /api/products/category/{category} (par catégorie)
- * 
+ *
  * Routes protégées (SELLER uniquement) :
  * - POST /api/products (créer un produit)
  * - PUT /api/products/{id} (modifier son produit)
@@ -35,10 +34,13 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
-    
-    @Autowired
-    private ProductService productService;
+
+    private static final String ERROR_KEY = "error";
+    private static final String USER_ID_ATTR = "userId";
+
+    private final ProductService productService;
     
     /**
      * GET ALL PRODUCTS (PUBLIC)
@@ -132,19 +134,14 @@ public class ProductController {
     public ResponseEntity<?> createProduct(
             @Valid @RequestBody ProductRequest request,
             HttpServletRequest httpRequest) {
-        
         try {
-            // Récupérer userId et userName depuis le JWT (mis par le filter)
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
             String userName = (String) httpRequest.getAttribute("userName");
-            
             ProductResponse product = productService.createProduct(request, userId, userName);
             return ResponseEntity.status(HttpStatus.CREATED).body(product);
-            
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
     
@@ -154,7 +151,7 @@ public class ProductController {
     @GetMapping("/seller/my-products")
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<List<ProductResponse>> getMyProducts(HttpServletRequest httpRequest) {
-        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
         List<ProductResponse> products = productService.getProductsBySeller(userId);
         return ResponseEntity.ok(products);
     }
@@ -168,20 +165,17 @@ public class ProductController {
             @PathVariable String id,
             @Valid @RequestBody ProductRequest request,
             HttpServletRequest httpRequest) {
-        
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
             ProductResponse product = productService.updateProduct(id, request, userId);
             return ResponseEntity.ok(product);
-            
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            
             if (e.getMessage().contains("not authorized")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
     
@@ -193,23 +187,17 @@ public class ProductController {
     public ResponseEntity<?> deleteProduct(
             @PathVariable String id,
             HttpServletRequest httpRequest) {
-        
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
             productService.deleteProduct(id, userId);
-            
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Product deleted successfully");
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(Map.of("message", "Product deleted successfully"));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            
             if (e.getMessage().contains("not authorized")) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 }

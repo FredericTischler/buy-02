@@ -26,6 +26,11 @@ import java.util.Map;
 @Slf4j
 public class OrderController {
 
+    private static final String ERROR_KEY = "error";
+    private static final String USER_ID_ATTR = "userId";
+    private static final String USER_NOT_AUTHENTICATED = "User not authenticated";
+    private static final String NOT_AUTHORIZED = "not authorized";
+
     private final OrderService orderService;
 
     /**
@@ -37,13 +42,13 @@ public class OrderController {
             @Valid @RequestBody OrderRequest request,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
             String userName = (String) httpRequest.getAttribute("userName");
             String userEmail = (String) httpRequest.getAttribute("userEmail");
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderResponse order = orderService.createOrder(request, userId, userName, userEmail);
@@ -51,7 +56,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error creating order: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -64,13 +69,13 @@ public class OrderController {
             @PathVariable String id,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
             String role = (String) httpRequest.getAttribute("userRole");
             boolean isSeller = "SELLER".equals(role);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderResponse order = orderService.getOrderById(id, userId, isSeller);
@@ -78,10 +83,10 @@ public class OrderController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not authorized")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -94,11 +99,11 @@ public class OrderController {
             @RequestParam(required = false) OrderStatus status,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             List<OrderResponse> orders;
@@ -111,7 +116,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error fetching user orders: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -127,11 +132,11 @@ public class OrderController {
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderSearchParams params = new OrderSearchParams(keyword, status, sortBy, sortDir);
@@ -140,7 +145,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error searching user orders: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -154,11 +159,11 @@ public class OrderController {
             @RequestParam(required = false) OrderStatus status,
             HttpServletRequest httpRequest) {
         try {
-            String sellerId = (String) httpRequest.getAttribute("userId");
+            String sellerId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (sellerId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             List<OrderResponse> orders;
@@ -171,7 +176,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error fetching seller orders: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -188,11 +193,11 @@ public class OrderController {
             @RequestParam(required = false, defaultValue = "desc") String sortDir,
             HttpServletRequest httpRequest) {
         try {
-            String sellerId = (String) httpRequest.getAttribute("userId");
+            String sellerId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (sellerId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderSearchParams params = new OrderSearchParams(keyword, status, sortBy, sortDir);
@@ -201,7 +206,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error searching seller orders: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -216,11 +221,11 @@ public class OrderController {
             @Valid @RequestBody StatusUpdateRequest request,
             HttpServletRequest httpRequest) {
         try {
-            String sellerId = (String) httpRequest.getAttribute("userId");
+            String sellerId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (sellerId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderResponse order = orderService.updateOrderStatus(id, request, sellerId);
@@ -228,14 +233,14 @@ public class OrderController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not authorized")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             if (e.getMessage().contains("Invalid status")) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -249,11 +254,11 @@ public class OrderController {
             @RequestBody(required = false) Map<String, String> body,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             String reason = body != null ? body.get("reason") : null;
@@ -262,14 +267,14 @@ public class OrderController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not authorized")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             if (e.getMessage().contains("cannot be cancelled")) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -282,13 +287,13 @@ public class OrderController {
             @PathVariable String id,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
             String userName = (String) httpRequest.getAttribute("userName");
             String userEmail = (String) httpRequest.getAttribute("userEmail");
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderResponse order = orderService.reorder(id, userId, userName, userEmail);
@@ -296,10 +301,10 @@ public class OrderController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not authorized")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -310,11 +315,11 @@ public class OrderController {
     @GetMapping("/stats/user")
     public ResponseEntity<?> getUserStats(HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderService.UserOrderStats stats = orderService.getUserStats(userId);
@@ -322,7 +327,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error fetching user stats: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -334,11 +339,11 @@ public class OrderController {
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<?> getSellerStats(HttpServletRequest httpRequest) {
         try {
-            String sellerId = (String) httpRequest.getAttribute("userId");
+            String sellerId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (sellerId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             OrderService.SellerOrderStats stats = orderService.getSellerStats(sellerId);
@@ -346,7 +351,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error fetching seller stats: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -357,11 +362,11 @@ public class OrderController {
     @GetMapping("/stats/user/products")
     public ResponseEntity<?> getUserProductStats(HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             UserProductStats stats = orderService.getUserProductStats(userId);
@@ -369,7 +374,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error fetching user product stats: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -381,11 +386,11 @@ public class OrderController {
     @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<?> getSellerProductStats(HttpServletRequest httpRequest) {
         try {
-            String sellerId = (String) httpRequest.getAttribute("userId");
+            String sellerId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (sellerId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             SellerProductStats stats = orderService.getSellerProductStats(sellerId);
@@ -393,7 +398,7 @@ public class OrderController {
         } catch (Exception e) {
             log.error("Error fetching seller product stats: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -406,11 +411,11 @@ public class OrderController {
             @PathVariable String id,
             HttpServletRequest httpRequest) {
         try {
-            String userId = (String) httpRequest.getAttribute("userId");
+            String userId = (String) httpRequest.getAttribute(USER_ID_ATTR);
 
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User not authenticated"));
+                        .body(Map.of(ERROR_KEY, USER_NOT_AUTHENTICATED));
             }
 
             orderService.deleteOrder(id, userId);
@@ -418,14 +423,14 @@ public class OrderController {
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not authorized")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             if (e.getMessage().contains("cannot be deleted")) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", e.getMessage()));
+                        .body(Map.of(ERROR_KEY, e.getMessage()));
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 

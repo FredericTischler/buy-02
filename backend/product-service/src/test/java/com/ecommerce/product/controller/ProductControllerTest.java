@@ -19,6 +19,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -205,5 +211,127 @@ class ProductControllerTest {
         mockMvc.perform(get("/api/products/seller/my-products").requestAttr("userId", "seller-1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].sellerId").value("seller-1"));
+    }
+
+    // ==================== PAGINATION ENDPOINT TESTS ====================
+
+    @Test
+    void getProductsPaginated_shouldReturnPagedResults() throws Exception {
+        List<ProductResponse> content = new ArrayList<>();
+        content.add(sampleResponse());
+        Pageable pageable = PageRequest.of(0, 12);
+        Page<ProductResponse> page = new PageImpl<>(content, pageable, 1);
+        Mockito.doReturn(page).when(productService).getAllProductsPaginated(
+            Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString(), Mockito.anyString());
+
+        mockMvc.perform(get("/api/products/paginated"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].id").value("id"))
+            .andExpect(jsonPath("$.content[0].name").value("Phone"));
+    }
+
+    @Test
+    void getProductsPaginated_shouldAcceptCustomParameters() throws Exception {
+        List<ProductResponse> content = new ArrayList<>();
+        content.add(sampleResponse());
+        Pageable pageable = PageRequest.of(1, 20);
+        Page<ProductResponse> page = new PageImpl<>(content, pageable, 1);
+        Mockito.doReturn(page).when(productService).getAllProductsPaginated(
+            Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString(), Mockito.anyString());
+
+        mockMvc.perform(get("/api/products/paginated")
+                .param("page", "1")
+                .param("size", "20")
+                .param("sortBy", "price")
+                .param("sortDir", "asc"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray());
+    }
+
+    @Test
+    void filterProducts_shouldReturnFilteredResults() throws Exception {
+        List<ProductResponse> content = new ArrayList<>();
+        content.add(sampleResponse());
+        Pageable pageable = PageRequest.of(0, 12);
+        Page<ProductResponse> page = new PageImpl<>(content, pageable, 1);
+        Mockito.doReturn(page).when(productService).searchProductsAdvanced(
+            Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+            Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString(), Mockito.anyString());
+
+        mockMvc.perform(get("/api/products/filter"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].id").value("id"));
+    }
+
+    @Test
+    void filterProducts_shouldAcceptAllFilterParameters() throws Exception {
+        List<ProductResponse> content = new ArrayList<>();
+        content.add(sampleResponse());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ProductResponse> page = new PageImpl<>(content, pageable, 1);
+        Mockito.doReturn(page).when(productService).searchProductsAdvanced(
+            Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+            Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString(), Mockito.anyString());
+
+        mockMvc.perform(get("/api/products/filter")
+                .param("keyword", "phone")
+                .param("category", "Tech")
+                .param("minPrice", "10.0")
+                .param("maxPrice", "100.0")
+                .param("minStock", "1")
+                .param("page", "0")
+                .param("size", "10")
+                .param("sortBy", "price")
+                .param("sortDir", "asc"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].category").value("Tech"));
+    }
+
+    @Test
+    void filterProducts_shouldHandleEmptyResults() throws Exception {
+        List<ProductResponse> content = new ArrayList<>();
+        Pageable pageable = PageRequest.of(0, 12);
+        Page<ProductResponse> emptyPage = new PageImpl<>(content, pageable, 0);
+        Mockito.doReturn(emptyPage).when(productService).searchProductsAdvanced(
+            Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any(),
+            Mockito.anyInt(), Mockito.anyInt(), Mockito.anyString(), Mockito.anyString());
+
+        mockMvc.perform(get("/api/products/filter")
+                .param("keyword", "nonexistent"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isEmpty());
+    }
+
+    @Test
+    void getAvailableProducts_shouldReturnProductsInStock() throws Exception {
+        Mockito.when(productService.getAvailableProducts()).thenReturn(List.of(sampleResponse()));
+
+        mockMvc.perform(get("/api/products/available"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value("id"))
+            .andExpect(jsonPath("$[0].stock").value(5));
+    }
+
+    @Test
+    void getAvailableProducts_shouldReturnEmptyListWhenNoStock() throws Exception {
+        Mockito.when(productService.getAvailableProducts()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/products/available"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void updateProduct_shouldReturnNotFoundWhenProductMissing() throws Exception {
+        ProductRequest request = new ProductRequest("Phone", "Desc", 10.0, "Tech", 5);
+        Mockito.when(productService.updateProduct(eq("missing"), any(), eq("seller-1")))
+            .thenThrow(new RuntimeException("Product not found"));
+
+        mockMvc.perform(put("/api/products/missing")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .requestAttr("userId", "seller-1"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Product not found"));
     }
 }

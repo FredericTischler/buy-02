@@ -636,4 +636,230 @@ class OrderServiceTest {
 
         return order;
     }
+
+    private Order createDeliveredOrder(String orderId, String userId) {
+        Order order = createSampleOrder(orderId, userId);
+        order.setStatus(OrderStatus.DELIVERED);
+        order.setDeliveredAt(LocalDateTime.now());
+        return order;
+    }
+
+    // ==================== USER PRODUCT STATS TESTS ====================
+
+    @Test
+    void getUserProductStats_shouldReturnEmptyStatsForNoOrders() {
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("user-1")).thenReturn(Collections.emptyList());
+
+        UserProductStats stats = orderService.getUserProductStats("user-1");
+
+        assertThat(stats.getMostPurchasedProducts()).isEmpty();
+        assertThat(stats.getTopCategories()).isEmpty();
+        assertThat(stats.getTotalUniqueProducts()).isZero();
+        assertThat(stats.getTotalItemsPurchased()).isZero();
+    }
+
+    @Test
+    void getUserProductStats_shouldAggregateDeliveredOrdersOnly() {
+        Order deliveredOrder = createDeliveredOrder("order-1", "user-1");
+        Order pendingOrder = createSampleOrder("order-2", "user-1");
+        pendingOrder.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("user-1"))
+            .thenReturn(Arrays.asList(deliveredOrder, pendingOrder));
+
+        UserProductStats stats = orderService.getUserProductStats("user-1");
+
+        assertThat(stats.getMostPurchasedProducts()).isNotEmpty();
+        assertThat(stats.getTotalItemsPurchased()).isEqualTo(4); // 2 + 2 from delivered order only
+    }
+
+    @Test
+    void getUserProductStats_shouldCalculateMostPurchasedProducts() {
+        Order order1 = createDeliveredOrder("order-1", "user-1");
+        Order order2 = createDeliveredOrder("order-2", "user-1");
+
+        when(orderRepository.findByUserIdOrderByCreatedAtDesc("user-1"))
+            .thenReturn(Arrays.asList(order1, order2));
+
+        UserProductStats stats = orderService.getUserProductStats("user-1");
+
+        assertThat(stats.getMostPurchasedProducts()).isNotEmpty();
+        assertThat(stats.getMostPurchasedProducts()).hasSizeLessThanOrEqualTo(10);
+    }
+
+    // ==================== SELLER PRODUCT STATS TESTS ====================
+
+    @Test
+    void getSellerProductStats_shouldReturnEmptyStatsForNoOrders() {
+        when(orderRepository.findBySellerId("seller-1")).thenReturn(Collections.emptyList());
+
+        SellerProductStats stats = orderService.getSellerProductStats("seller-1");
+
+        assertThat(stats.getBestSellingProducts()).isEmpty();
+        assertThat(stats.getRecentSales()).isEmpty();
+        assertThat(stats.getTotalUniqueProductsSold()).isZero();
+        assertThat(stats.getTotalCustomers()).isZero();
+    }
+
+    @Test
+    void getSellerProductStats_shouldCalculateBestSellingProducts() {
+        Order order1 = createDeliveredOrder("order-1", "user-1");
+        Order order2 = createDeliveredOrder("order-2", "user-2");
+
+        when(orderRepository.findBySellerId("seller-1"))
+            .thenReturn(Arrays.asList(order1, order2));
+
+        SellerProductStats stats = orderService.getSellerProductStats("seller-1");
+
+        assertThat(stats.getBestSellingProducts()).isNotEmpty();
+        assertThat(stats.getTotalCustomers()).isPositive();
+    }
+
+    @Test
+    void getSellerProductStats_shouldFilterOnlyDeliveredAndShippedOrders() {
+        Order deliveredOrder = createDeliveredOrder("order-1", "user-1");
+        Order pendingOrder = createSampleOrder("order-2", "user-2");
+        pendingOrder.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findBySellerId("seller-1"))
+            .thenReturn(Arrays.asList(deliveredOrder, pendingOrder));
+
+        SellerProductStats stats = orderService.getSellerProductStats("seller-1");
+
+        // Only delivered order should count
+        assertThat(stats.getTotalCustomers()).isEqualTo(1);
+    }
+
+    // ==================== SEARCH ORDERS TESTS ====================
+
+    @Test
+    void searchOrdersByUser_shouldReturnFilteredOrders() {
+        Order order1 = createSampleOrder("order-1", "user-1");
+        order1.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findByUserIdAndStatusOrderByCreatedAtDesc("user-1", OrderStatus.PENDING))
+            .thenReturn(Arrays.asList(order1));
+
+        OrderSearchParams params = new OrderSearchParams();
+        params.setStatus(OrderStatus.PENDING);
+        params.setSortBy("createdAt");
+        params.setSortDir("desc");
+
+        List<OrderResponse> results = orderService.searchOrdersByUser("user-1", params);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getStatus()).isEqualTo(OrderStatus.PENDING);
+    }
+
+    @Test
+    void searchOrdersByUser_shouldSearchByKeyword() {
+        Order order = createSampleOrder("order-123", "user-1");
+
+        when(orderRepository.searchByUserIdAndKeyword("user-1", "123"))
+            .thenReturn(Arrays.asList(order));
+
+        OrderSearchParams params = new OrderSearchParams();
+        params.setKeyword("123");
+        params.setSortBy("createdAt");
+        params.setSortDir("desc");
+
+        List<OrderResponse> results = orderService.searchOrdersByUser("user-1", params);
+
+        assertThat(results).hasSize(1);
+        verify(orderRepository).searchByUserIdAndKeyword("user-1", "123");
+    }
+
+    @Test
+    void searchOrdersForSeller_shouldReturnOrdersWithSellerProducts() {
+        Order order = createSampleOrderWithMixedSellers("order-1", "user-1");
+
+        when(orderRepository.findBySellerId("seller-1"))
+            .thenReturn(Arrays.asList(order));
+
+        OrderSearchParams params = new OrderSearchParams();
+        params.setSortBy("createdAt");
+        params.setSortDir("desc");
+
+        List<OrderResponse> results = orderService.searchOrdersForSeller("seller-1", params);
+
+        assertThat(results).isNotEmpty();
+    }
+
+    @Test
+    void searchOrdersForSeller_shouldFilterByStatus() {
+        Order order = createSampleOrder("order-1", "user-1");
+        order.setStatus(OrderStatus.DELIVERED);
+
+        when(orderRepository.findBySellerIdAndStatus("seller-1", OrderStatus.DELIVERED))
+            .thenReturn(Arrays.asList(order));
+
+        OrderSearchParams params = new OrderSearchParams();
+        params.setStatus(OrderStatus.DELIVERED);
+        params.setSortBy("createdAt");
+        params.setSortDir("desc");
+
+        List<OrderResponse> results = orderService.searchOrdersForSeller("seller-1", params);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getStatus()).isEqualTo(OrderStatus.DELIVERED);
+    }
+
+    // ==================== DELETE ORDER TESTS ====================
+
+    @Test
+    void deleteOrder_shouldDeleteCancelledOrder() {
+        Order order = createSampleOrder("order-1", "user-1");
+        order.setStatus(OrderStatus.CANCELLED);
+
+        when(orderRepository.findById("order-1")).thenReturn(Optional.of(order));
+
+        orderService.deleteOrder("order-1", "user-1");
+
+        verify(orderRepository).delete(order);
+    }
+
+    @Test
+    void deleteOrder_shouldDeleteDeliveredOrder() {
+        Order order = createSampleOrder("order-1", "user-1");
+        order.setStatus(OrderStatus.DELIVERED);
+
+        when(orderRepository.findById("order-1")).thenReturn(Optional.of(order));
+
+        orderService.deleteOrder("order-1", "user-1");
+
+        verify(orderRepository).delete(order);
+    }
+
+    @Test
+    void deleteOrder_shouldThrowForPendingOrder() {
+        Order order = createSampleOrder("order-1", "user-1");
+        order.setStatus(OrderStatus.PENDING);
+
+        when(orderRepository.findById("order-1")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.deleteOrder("order-1", "user-1"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("cannot be deleted");
+    }
+
+    @Test
+    void deleteOrder_shouldThrowForWrongUser() {
+        Order order = createSampleOrder("order-1", "user-1");
+        order.setStatus(OrderStatus.CANCELLED);
+
+        when(orderRepository.findById("order-1")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.deleteOrder("order-1", "other-user"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("not authorized");
+    }
+
+    @Test
+    void deleteOrder_shouldThrowForNonExistentOrder() {
+        when(orderRepository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.deleteOrder("missing", "user-1"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("not found");
+    }
 }

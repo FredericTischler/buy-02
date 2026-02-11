@@ -7,33 +7,31 @@ import com.ecommerce.user.service.LoginRateLimiterService;
 import com.ecommerce.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  * AUTH CONTROLLER
- * 
+ *
  * Gère les APIs d'authentification :
- * - POST /api/auth/register → Inscription
- * - POST /api/auth/login    → Connexion
- * 
+ * - POST /api/auth/register -> Inscription
+ * - POST /api/auth/login    -> Connexion
+ *
  * Ces routes sont PUBLIQUES (pas besoin de JWT)
  */
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")  // Permet CORS (Angular peut appeler les APIs)
+@RequiredArgsConstructor
 public class AuthController {
-    
-    @Autowired
-    private UserService userService;
 
-    @Autowired
-    private LoginRateLimiterService rateLimiter;
+    private static final String ERROR_KEY = "error";
+
+    private final UserService userService;
+    private final LoginRateLimiterService rateLimiter;
     
     /**
      * API : INSCRIPTION
@@ -64,17 +62,10 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
             String message = userService.register(request);
-            
-            Map<String, String> response = new HashMap<>();
-            response.put("message", message);
-            
-            return ResponseEntity.ok(response);
-            
+            return ResponseEntity.ok(Map.of("message", message));
         } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
     
@@ -113,21 +104,18 @@ public class AuthController {
 
         if (rateLimiter.isBlocked(key)) {
             long remaining = rateLimiter.getRemainingBlockSeconds(key);
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Trop de tentatives de connexion. Réessayez dans " + remaining + " secondes.");
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(error);
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of(ERROR_KEY, "Trop de tentatives de connexion. Réessayez dans " + remaining + " secondes."));
         }
 
         try {
             AuthResponse response = userService.login(request);
             rateLimiter.resetAttempts(key);
             return ResponseEntity.ok(response);
-
         } catch (RuntimeException e) {
             rateLimiter.recordFailedAttempt(key);
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(ERROR_KEY, e.getMessage()));
         }
     }
 
@@ -151,8 +139,6 @@ public class AuthController {
      */
     @GetMapping("/health")
     public ResponseEntity<?> health() {
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "User Service is running");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("status", "User Service is running"));
     }
 }

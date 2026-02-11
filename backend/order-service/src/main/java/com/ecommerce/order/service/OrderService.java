@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +50,7 @@ public class OrderService {
         // Convert request items to order items
         List<OrderItem> orderItems = request.getItems().stream()
                 .map(this::toOrderItem)
-                .collect(Collectors.toList());
+                .toList();
         order.setItems(orderItems);
 
         // Calculate total
@@ -96,7 +95,7 @@ public class OrderService {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(OrderResponse::fromOrder)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -106,7 +105,7 @@ public class OrderService {
         return orderRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, status)
                 .stream()
                 .map(OrderResponse::fromOrder)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -130,7 +129,7 @@ public class OrderService {
         return sortOrders(orders, params)
                 .stream()
                 .map(OrderResponse::fromOrder)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -141,7 +140,7 @@ public class OrderService {
                 .stream()
                 .map(order -> filterOrderItemsForSeller(order, sellerId))
                 .map(OrderResponse::fromOrder)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -152,7 +151,7 @@ public class OrderService {
                 .stream()
                 .map(order -> filterOrderItemsForSeller(order, sellerId))
                 .map(OrderResponse::fromOrder)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -177,7 +176,7 @@ public class OrderService {
                 .stream()
                 .map(order -> filterOrderItemsForSeller(order, sellerId))
                 .map(OrderResponse::fromOrder)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -289,7 +288,7 @@ public class OrderService {
                     itemRequest.setImageUrl(item.getImageUrl());
                     return itemRequest;
                 })
-                .collect(Collectors.toList()));
+                .toList());
         request.setShippingAddress(originalOrder.getShippingAddress());
         request.setShippingCity(originalOrder.getShippingCity());
         request.setShippingPostalCode(originalOrder.getShippingPostalCode());
@@ -386,7 +385,7 @@ public class OrderService {
         // Filter items to only show seller's products
         List<OrderItem> sellerItems = order.getItems().stream()
                 .filter(item -> item.getSellerId().equals(sellerId))
-                .collect(Collectors.toList());
+                .toList();
         filtered.setItems(sellerItems);
 
         // Recalculate total for seller's items only
@@ -428,7 +427,7 @@ public class OrderService {
 
         return orders.stream()
                 .sorted(comparator)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private void publishOrderEvent(Order order, OrderEvent.EventType eventType) {
@@ -455,7 +454,7 @@ public class OrderService {
         List<Order> deliveredOrders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
-                .collect(Collectors.toList());
+                .toList();
 
         // Aggregate product purchases
         java.util.Map<String, UserProductStats.ProductPurchaseInfo> productMap = new java.util.HashMap<>();
@@ -492,7 +491,7 @@ public class OrderService {
         List<UserProductStats.ProductPurchaseInfo> mostPurchased = productMap.values().stream()
                 .sorted((a, b) -> Integer.compare(b.getTotalQuantity(), a.getTotalQuantity()))
                 .limit(10)
-                .collect(Collectors.toList());
+                .toList();
 
         // Calculate category statistics (using seller name as proxy for category since we don't have category in OrderItem)
         java.util.Map<String, UserProductStats.CategoryStats> categoryMap = new java.util.HashMap<>();
@@ -519,7 +518,7 @@ public class OrderService {
         List<UserProductStats.CategoryStats> topCategories = categoryMap.values().stream()
                 .sorted((a, b) -> Double.compare(b.getTotalSpent(), a.getTotalSpent()))
                 .limit(5)
-                .collect(Collectors.toList());
+                .toList();
 
         int totalUniqueProducts = productMap.size();
         int totalItemsPurchased = productMap.values().stream()
@@ -537,7 +536,7 @@ public class OrderService {
 
         List<Order> deliveredOrders = sellerOrders.stream()
                 .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
-                .collect(Collectors.toList());
+                .toList();
 
         // Aggregate best selling products
         java.util.Map<String, SellerProductStats.BestSellingProduct> productMap = new java.util.HashMap<>();
@@ -584,7 +583,7 @@ public class OrderService {
         List<SellerProductStats.BestSellingProduct> bestSelling = productMap.values().stream()
                 .sorted((a, b) -> Integer.compare(b.getTotalSold(), a.getTotalSold()))
                 .limit(10)
-                .collect(Collectors.toList());
+                .toList();
 
         // Get recent sales (last 10 sales across all orders)
         List<SellerProductStats.RecentSale> recentSales = sellerOrders.stream()
@@ -606,7 +605,7 @@ public class OrderService {
                                 order.getDeliveredAt() != null ? order.getDeliveredAt() : order.getCreatedAt()
                         )))
                 .limit(10)
-                .collect(Collectors.toList());
+                .toList();
 
         int totalUniqueProductsSold = productMap.size();
         int totalCustomers = uniqueCustomers.size();
